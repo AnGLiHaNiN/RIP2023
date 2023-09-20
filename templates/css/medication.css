@@ -1,0 +1,109 @@
+body, h1, h5, p {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+}
+
+.header {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    margin: 20px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+label {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+input[type="text"] {
+    margin-right: 20px;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+
+.button {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.medication_group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    margin: 20px -10px;
+}
+
+.medication {
+    width: 200px;
+    height: 300px;
+    margin: 10px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+
+.medication img {
+    height: auto;
+    max-height: 200px;
+}
+
+.medication_title {
+    margin-top: auto;
+    font-weight: bold;
+}
+
+.medication_button {
+    text-align: center;
+    text-decoration: none;
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    margin-top: 10px;
+}
+
+.details {
+    display: flex;
+    align-items: center;
+    margin: 20px;
+}
+
+.details img {
+    width: 200px;
+    margin-left: 10px;
+}
+
+.details p {
+    margin-left: 10px;
+}
+
+.back-button {
+    margin-top: 20px;
+    text-align: center;
+}
