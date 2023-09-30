@@ -12,12 +12,14 @@
 </div>
 <div class="container">
     <div class="medicine-details">
-        <img src="{{ .ImagePath }}" alt="Изображение" class="medicine-image">
+        <img src="{{.ImagePath}}" alt="Изображение" class="medicine-image">
         <div class="medicine-info">
             <h2>{{ .Name }}</h2>
             <p><strong>Дозировка:</strong> {{ .Dosage }}</p>
             <p><strong>Производитель:</strong> {{ .Manufacturer }}</p>
             <p><strong>Цена:</strong> {{ .Price }} руб.</p>
+            <p><strong>Описание:</strong> {{ .Description }}</p>
+            <p><strong>Молекулярный вес:</strong> {{ .MolecularWeight }}</p>
             <a class="button" href="/">На главную страницу</a>
         </div>
     </div>

@@ -15,11 +15,14 @@
     </form>
 </div>
 <div class="medication_group">
-    {{ range .medications }}
+    {{ range .medications}}
     <div class="medication">
         <img class="medication_image" src="{{ .ImagePath }}" alt="Изображение">
         <h5 class="medication_title">{{ .Name }}</h5>
-        <a class="button medication_button" href="{{ .Name }}">Подробнее</a>
+        <a class="button medication_button" href="{{ .ID }}">Подробнее</a>
+        <form method="POST" action="/{{ .ID }}">
+            <input type="submit" class="button medication_button delete-button" value="Удалить">
+        </form>
         <div></div>
     </div>
     {{ end }}
