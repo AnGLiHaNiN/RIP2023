@@ -1,0 +1,725 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "title": "Electronic notifications",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "127.0.0.1:5000",
+    "basePath": "/",
+    "paths": {
+        "/api/components": {
+            "get": {
+                "description": "Возвращает все компоненты с фильтрацией по статусу и дате формирования",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Компоненты"
+                ],
+                "summary": "Получить все компоненты",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "статус компонента",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "начальная дата формирования",
+                        "name": "formation_date_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "конечная дата формирвания",
+                        "name": "formation_date_end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.AllComponentsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/components/user_confirm": {
+            "put": {
+                "description": "Сформировать или удалить компонент пользователем",
+                "tags": [
+                    "Компоненты"
+                ],
+                "summary": "Сформировать компонент",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/components/{component_id}": {
+            "get": {
+                "description": "Возвращает подробную информацию о компоненте и его названии",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Компоненты"
+                ],
+                "summary": "Получить один компонент",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id компонента",
+                        "name": "component_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.ComponentResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Позволяет изменить название компонента и возвращает обновлённые данные",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Компоненты"
+                ],
+                "summary": "Указать название компонента",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id компонента",
+                        "name": "component_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Название компонента",
+                        "name": "component_name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.SwaggerUpdateComponentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.UpdateComponentResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет компонент по id",
+                "tags": [
+                    "Компоненты"
+                ],
+                "summary": "Удалить компонент",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id компонента",
+                        "name": "component_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/components/{component_id}/delete_medicine/{medicine_id}": {
+            "delete": {
+                "description": "Удалить лекарство из компонента",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Компоненты"
+                ],
+                "summary": "Удалить лекарство из компонента",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id компонента",
+                        "name": "component_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id лекарства",
+                        "name": "medicine_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.AllMedicinesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/components/{component_id}/moderator_confirm": {
+            "put": {
+                "description": "Подтвердить или отменить компонент модератором",
+                "tags": [
+                    "Компоненты"
+                ],
+                "summary": "Подтвердить компонент",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id компонента",
+                        "name": "component_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "подтвердить",
+                        "name": "confirm",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/medicines": {
+            "get": {
+                "description": "Возвращает все доступные лекарства с опциональной фильтрацией по Названию",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Получить все лекарства",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Название для фильтрации",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.GetAllMedicinesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/medicines/": {
+            "post": {
+                "description": "Добавить новое лекарство",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Добавить лекарство",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Изображение лекарства",
+                        "name": "image",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Название",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Производитель",
+                        "name": "manufacturer",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество",
+                        "name": "amount",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дозировка",
+                        "name": "dosage",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/medicines/{medicine_id}": {
+            "get": {
+                "description": "Возвращает более подробную информацию об одном лекарстве",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Получить одно лекарство",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id лекарства",
+                        "name": "medicine_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ds.Medicine"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Изменить данные полей о лекарстве",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Изменить лекарство",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор лекарства",
+                        "name": "medicine_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Название",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Производитель",
+                        "name": "manufacturer",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Количество",
+                        "name": "amount",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Изображение лекарства",
+                        "name": "image",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дозировка",
+                        "name": "dosage",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {}
+            },
+            "delete": {
+                "description": "Удаляет лекраство по id",
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Удалить лекарство",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id лекарства",
+                        "name": "medicine_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/medicines/{medicine_id}/add_to_component": {
+            "post": {
+                "description": "Добавить выбранное лекарство в черновик копмпонента",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Добавить в компонент",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id лекарства",
+                        "name": "medicine_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.AddToComponentResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/login": {
+            "post": {
+                "description": "Авторизует пользователя по логиню, паролю и отдаёт jwt токен для дальнейших запросов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Авторизация"
+                ],
+                "summary": "Авторизация",
+                "parameters": [
+                    {
+                        "description": "login and password",
+                        "name": "user_credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemes.LoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.SwaggerLoginResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/loguot": {
+            "post": {
+                "description": "Выход из аккаунта",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Авторизация"
+                ],
+                "summary": "Выйти из аккаунта",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/user/sign_up": {
+            "post": {
+                "description": "Регистрация нового пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Авторизация"
+                ],
+                "summary": "Регистрация",
+                "parameters": [
+                    {
+                        "description": "login and password",
+                        "name": "user_credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemes.RegisterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemes.RegisterResp"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "app.SwaggerUpdateComponentRequest": {
+            "type": "object",
+            "properties": {
+                "component_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "ds.Medicine": {
+            "type": "object",
+            "required": [
+                "amount",
+                "dosage",
+                "manufacturer",
+                "name"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "dosage": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "manufacturer": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemes.AddToComponentResp": {
+            "type": "object",
+            "properties": {
+                "medicine_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schemes.AllComponentsResponse": {
+            "type": "object",
+            "properties": {
+                "components": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schemes.ComponentOutput"
+                    }
+                }
+            }
+        },
+        "schemes.AllMedicinesResponse": {
+            "type": "object",
+            "properties": {
+                "medicines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ds.Medicine"
+                    }
+                }
+            }
+        },
+        "schemes.ComponentOutput": {
+            "type": "object",
+            "properties": {
+                "completion_date": {
+                    "type": "string"
+                },
+                "component_name": {
+                    "type": "string"
+                },
+                "creation_date": {
+                    "type": "string"
+                },
+                "customer": {
+                    "type": "string"
+                },
+                "formation_date": {
+                    "type": "string"
+                },
+                "moderator": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemes.ComponentResponse": {
+            "type": "object",
+            "properties": {
+                "component": {
+                    "$ref": "#/definitions/schemes.ComponentOutput"
+                },
+                "medicines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ds.Medicine"
+                    }
+                }
+            }
+        },
+        "schemes.ComponentShort": {
+            "type": "object",
+            "properties": {
+                "medicine_count": {
+                    "type": "integer"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemes.GetAllMedicinesResponse": {
+            "type": "object",
+            "properties": {
+                "draft_component": {
+                    "$ref": "#/definitions/schemes.ComponentShort"
+                },
+                "medicines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ds.Medicine"
+                    }
+                }
+            }
+        },
+        "schemes.LoginReq": {
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "maxLength": 30
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 30
+                }
+            }
+        },
+        "schemes.RegisterReq": {
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "maxLength": 30
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 30
+                }
+            }
+        },
+        "schemes.RegisterResp": {
+            "type": "object",
+            "properties": {
+                "ok": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "schemes.SwaggerLoginResp": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemes.UpdateComponentResponse": {
+            "type": "object",
+            "properties": {
+                "components": {
+                    "$ref": "#/definitions/schemes.ComponentOutput"
+                }
+            }
+        }
+    }
+}

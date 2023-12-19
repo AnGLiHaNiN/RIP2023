@@ -1,0 +1,82 @@
+version: '3.8'
+
+x-minio-common: &minio-common
+  image: quay.io/minio/minio:RELEASE.2022-10-15T19-57-03Z # устанавливаем image
+  # команда которая выполняется при запуске контейнера
+  # --console-address ":9001" - указываем запустить консоль администратора на порту 9001
+  #  http://minio{1...2}/data{1...2}  - указывает ноде адреса других нод,
+  # чтобы они могли связаться между собой если сломается одна из нод,
+  # остальные ноды это поймут и будут предпринимать действия чтобы сохранить файлы
+  command: server --console-address ":9001" http://minio{1...2}/data{1...2} 
+  environment:
+    MINIO_SECRET_KEY: minio124 # логин админа
+    MINIO_ACCESS_KEY: minio # пароль админа
+  expose:
+    - "9000"
+    - "9001"
+  healthcheck: # проверка состояния работоспособности кластера происходит путем выполнения get запроса на http://localhost:9000/minio/health/live
+    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+    interval: 30s
+    timeout: 20s
+    retries: 3
+
+services:
+  minio1:
+    <<: *minio-common
+    hostname: minio1 # указываем что адрес внутри подсети docker будет http://minio1:9000/ и на порту 9001 для админки соотвественно
+    container_name: minio1
+    volumes: # куда физически переадресовать* память(в какие разделы) из виртуальной(в докере) на вашу машину.
+      - data1-1:/data1
+      - data1-2:/data2
+
+  minio2:
+    <<: *minio-common
+    hostname: minio2
+    container_name: minio2
+    volumes:
+      - data2-1:/data1
+      - data2-2:/data2
+
+  nginx:
+    image: nginx:1.19.2-alpine
+    hostname: nginx
+    container_name: nginx_load_balancer
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro 
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    depends_on:
+      - minio1
+      - minio2
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass password
+    volumes:
+      - redis-data:/data
+
+  # http://localhost:8001/
+  # host: redis
+  # port: 6379
+  # name: whatever
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: redisInsight
+    ports:
+      - '8001:8001'
+    volumes:
+      - redisinsight:/db 
+    depends_on:
+      - redis
+
+volumes:
+  data1-1:
+  data1-2:
+  data2-1:
+  data2-2:
+  redis-data:
+  redisinsight:

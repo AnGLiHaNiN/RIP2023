@@ -1,0 +1,13 @@
+ServiceHost = "0.0.0.0"
+ServicePort = 5000
+[minio]
+Endpoint = "localhost:9000"
+BucketName = "images"
+
+[jwt]
+Token = "peppa"
+ExpiresIn = "1h"
+
+[Redis]
+DialTimeout = "10s"
+ReadTimeout = "10s"
