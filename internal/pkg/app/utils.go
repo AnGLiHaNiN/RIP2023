@@ -45,10 +45,10 @@ func (app *Application) deleteImage(c *gin.Context, UUID string) error {
 }
 
 func (app *Application) getCustomer() string {
-	return "8c90c577-73c9-4b94-9d1c-a8790f146283"
+	return "63f6cb81-890d-42ff-ba83-721740b5f57e"
 }
 
 func (app *Application) getModerator() *string {
-	moderaorId := "a6cbc9b9-16ea-48c8-8cb2-9a2fee79ee8a"
+	moderaorId := "079b1514-c4c0-4a1d-966d-6c9135a962b2"
 	return &moderaorId
 }

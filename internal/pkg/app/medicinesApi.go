@@ -189,27 +189,27 @@ func (app *Application) AddToComponent(c *gin.Context) {
 		return
 	}
 
-	var notification *ds.Component
-	notification, err = app.repo.GetDraftComponent(app.getCustomer())
+	var component *ds.Component
+	component, err = app.repo.GetDraftComponent(app.getCustomer())
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if notification == nil {
-		notification, err = app.repo.CreateDraftComponent(app.getCustomer())
+	if component == nil {
+		component, err = app.repo.CreateDraftComponent(app.getCustomer())
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 	}
 
-	if err = app.repo.AddToComponent(notification.UUID, request.MedicineId); err != nil {
+	if err = app.repo.AddToComponent(component.UUID, request.MedicineId); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
 	var medicines []ds.Medicine
-	medicines, err = app.repo.GetComponentContent(notification.UUID)
+	medicines, err = app.repo.GetComponentContent(component.UUID)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
