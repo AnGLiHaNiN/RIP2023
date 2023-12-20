@@ -60,13 +60,20 @@ func (app *Application) GetAllComponents(c *gin.Context) {
 // @Router		/api/components/{component_id} [get]
 func (app *Application) GetComponent(c *gin.Context) {
 	var request schemes.ComponentRequest
+	var err error
 	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
 	userId := getUserId(c)
-	component, err := app.repo.GetComponentById(request.ComponentId, userId)
+	userRole := getUserRole(c)
+	var component *ds.Component
+	if userRole == role.Moderator {
+		component, err = app.repo.GetComponentById(request.ComponentId, nil)
+	} else {
+		component, err = app.repo.GetComponentById(request.ComponentId, &userId)
+	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -108,7 +115,7 @@ func (app *Application) UpdateComponent(c *gin.Context) {
 		return
 	}
 	userId := getUserId(c)
-	component, err := app.repo.GetComponentById(request.URI.ComponentId, userId)
+	component, err := app.repo.GetComponentById(request.URI.ComponentId, &userId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -133,6 +140,7 @@ func (app *Application) UpdateComponent(c *gin.Context) {
 // @Success		200
 // @Router		/api/components/{component_id} [delete]
 func (app *Application) DeleteComponent(c *gin.Context) {
+	var err error
 	var request schemes.ComponentRequest
 	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -140,7 +148,13 @@ func (app *Application) DeleteComponent(c *gin.Context) {
 	}
 
 	userId := getUserId(c)
-	component, err := app.repo.GetComponentById(request.ComponentId,userId)
+	userRole := getUserRole(c)
+	var component *ds.Component
+	if userRole == role.Moderator {
+		component, err = app.repo.GetComponentById(request.ComponentId, nil)
+	} else {
+		component, err = app.repo.GetComponentById(request.ComponentId, &userId)
+	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -150,8 +164,7 @@ func (app *Application) DeleteComponent(c *gin.Context) {
 		return
 	}
 
-	userROle := getUserRole(c)
-	if userROle == role.Customer && component.Status != ds.DRAFT {
+	if userRole == role.Customer && component.Status != ds.DRAFT {
 		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("компонент уже сформирован"))
 		return
 	}
@@ -173,13 +186,20 @@ func (app *Application) DeleteComponent(c *gin.Context) {
 // @Success		200 {object} schemes.AllMedicinesResponse
 // @Router		/api/components/{component_id}/delete_medicine/{medicine_id} [delete]
 func (app *Application) DeleteFromComponent(c *gin.Context) {
+	var err error
 	var request schemes.DeleteFromComponentRequest
 	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	userId := getUserId(c)
-	component, err := app.repo.GetComponentById(request.ComponentId,userId)
+	userRole := getUserRole(c)
+	var component *ds.Component
+	if userRole == role.Moderator {
+		component, err = app.repo.GetComponentById(request.ComponentId, nil)
+	} else {
+		component, err = app.repo.GetComponentById(request.ComponentId, &userId)
+	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -257,7 +277,7 @@ func (app *Application) ModeratorConfirm(c *gin.Context) {
 	}
 
 	userId := getUserId(c)
-	component, err := app.repo.GetComponentById(request.URI.ComponentId,userId)
+	component, err := app.repo.GetComponentById(request.URI.ComponentId,nil)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

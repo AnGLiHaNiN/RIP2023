@@ -16,8 +16,8 @@ import (
 	"R_I_P_labs/internal/app/role"
 
 
-	"github.com/swaggo/files"       // swagger embed files
-	"github.com/swaggo/gin-swagger" // gin-swagger middleware
+	"github.com/swaggo/files"      
+	"github.com/swaggo/gin-swagger" 
 	_ "R_I_P_labs/docs"
 )
 

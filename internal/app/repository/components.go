@@ -54,12 +54,14 @@ func (r *Repository) CreateDraftComponent(customerId string) (*ds.Component, err
 	return component, nil
 }
 
-func (r *Repository) GetComponentById(componentId, userId  string) (*ds.Component, error) {
+func (r *Repository) GetComponentById(componentId string, userId  *string) (*ds.Component, error) {
 	component := &ds.Component{}
-	err := r.db.Preload("Moderator").Preload("Customer").
-		Where("status != ?", ds.DELETED).
-		Where("moderator_id = ? OR customer_id = ?", userId, userId).
-		First(component, ds.Component{UUID: componentId}).Error
+	query := r.db.Preload("Moderator").Preload("Customer").
+		Where("status != ?", ds.DELETED)
+	if userId != nil {
+		query = query.Where("customer_id = ?", userId)
+	}
+	err := query.First(component, ds.Component{UUID: componentId}).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
