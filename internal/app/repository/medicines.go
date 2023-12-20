@@ -29,11 +29,11 @@ func (r *Repository) AddMedicine(medicine *ds.Medicine) error {
 	return nil
 }
 
-func (r *Repository) GetMedicineByName(FIO string) ([]ds.Medicine, error) {
+func (r *Repository) GetMedicineByName(name string) ([]ds.Medicine, error) {
 	var medicines []ds.Medicine
 
 	err := r.db.
-		Where("LOWER(fio) LIKE ?", "%"+strings.ToLower(FIO)+"%").Where("is_deleted = ?", false).
+		Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%").Where("is_deleted = ?", false).
 		Find(&medicines).Error
 
 	if err != nil {
