@@ -7,7 +7,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.63
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.16.0
-	gorm.io/driver/postgres v1.5.4
+	gorm.io/driver/postgres v1.5.3
 )
 
 require (
