@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"lab3/internal/app/ds"
 	"lab3/internal/app/schemes"
@@ -13,23 +12,33 @@ import (
 )
 
 func (app *Application) GetAllComponents(c *gin.Context) {
-	var request schemes.GetAllComponentsRequst
+	var request schemes.GetAllComponentsRequest
 	if err := c.ShouldBindQuery(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	components, err := app.repo.GetAllComponents(request.FormationDateStart, request.FormationDateEnd, request.Status)
+	components, err := app.repo.GetComponentByName(request.Name)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-
-	outputComponents := make([]schemes.ComponentOutput, len(components))
-	for i, component := range components {
-		outputComponents[i] = schemes.ConvertComponent(&component)
+	draftMedicine, err := app.repo.GetDraftMedicine(app.getCustomer())
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
-	c.JSON(http.StatusOK, schemes.AllComponentsResponse{Components: outputComponents})
+	response := schemes.GetAllComponentsResponse{DraftMedicine: nil, Components: components}
+	if draftMedicine != nil {
+		response.DraftMedicine = &schemes.MedicineShort{UUID: draftMedicine.UUID}
+		components, err := app.repo.GetMedicineProduction(draftMedicine.UUID)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		response.DraftMedicine.ComponentCount = len(components)
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 func (app *Application) GetComponent(c *gin.Context) {
@@ -39,7 +48,7 @@ func (app *Application) GetComponent(c *gin.Context) {
 		return
 	}
 
-	component, err := app.repo.GetComponentById(request.ComponentId, app.getCustomer())
+	component, err := app.repo.GetComponentByID(request.ComponentId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -48,41 +57,7 @@ func (app *Application) GetComponent(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
 		return
 	}
-
-	medicines, err := app.repo.GetComponentContent(request.ComponentId)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	c.JSON(http.StatusOK, schemes.ComponentResponse{Component: schemes.ConvertComponent(component), Medicines: medicines})
-}
-
-func (app *Application) UpdateComponent(c *gin.Context) {
-	var request schemes.UpdateComponentRequest
-	if err := c.ShouldBindUri(&request.URI); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-	if err := c.ShouldBind(&request); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-	component, err := app.repo.GetComponentById(request.URI.ComponentId, app.getCustomer())
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
-		return
-	}
-	component.ComponentName = request.ComponentName
-	if app.repo.SaveComponent(component); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, schemes.UpdateComponentResponse{Component:schemes.ConvertComponent(component)})
+	c.JSON(http.StatusOK, component)
 }
 
 func (app *Application) DeleteComponent(c *gin.Context) {
@@ -92,7 +67,7 @@ func (app *Application) DeleteComponent(c *gin.Context) {
 		return
 	}
 
-	component, err := app.repo.GetComponentById(request.ComponentId, app.getCustomer())
+	component, err := app.repo.GetComponentByID(request.ComponentId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -101,61 +76,57 @@ func (app *Application) DeleteComponent(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
 		return
 	}
-	component.Status = ds.DELETED
-
+	component.ImageURL = nil
+	component.IsDeleted = true
 	if err := app.repo.SaveComponent(component); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
+
 	c.Status(http.StatusOK)
 }
 
-func (app *Application) DeleteFromComponent(c *gin.Context) {
-	var request schemes.DeleteFromComponentRequest
+func (app *Application) AddComponent(c *gin.Context) {
+	var request schemes.AddComponentRequest
+	if err := c.ShouldBind(&request); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	component := ds.Component(request.Component)
+	if err := app.repo.AddComponent(&component); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	if request.Image != nil {
+		imageURL, err := app.uploadImage(c, request.Image, component.UUID)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		component.ImageURL = imageURL
+	}
+	if err := app.repo.SaveComponent(&component); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (app *Application) ChangeComponent(c *gin.Context) {
+	var request schemes.ChangeComponentRequest
 	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	component, err := app.repo.GetComponentById(request.ComponentId, app.getCustomer())
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
-		return
-	}
-	if component.Status != ds.DRAFT {
-		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя редактировать компонент со статусом: %s", component.Status))
-		return
-	}
-
-	if err := app.repo.DeleteFromComponent(request.ComponentId, request.MedicineId); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	medicines, err := app.repo.GetComponentContent(request.ComponentId)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, schemes.AllMedicinesResponse{Medicines: medicines})
-}
-
-func (app *Application) UserConfirm(c *gin.Context) {
-	var request schemes.UserConfirmRequest
-	if err := c.ShouldBindUri(&request.URI); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
 	if err := c.ShouldBind(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	component, err := app.repo.GetComponentById(request.URI.ComponentId, app.getCustomer())
+	component, err := app.repo.GetComponentByID(request.ComponentId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -164,39 +135,51 @@ func (app *Application) UserConfirm(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
 		return
 	}
-	if component.Status != ds.DRAFT {
-		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя сформировать компонент со статусом %s", component.Status))
-		return
+
+	if request.Name != nil {
+		component.Name = *request.Name
 	}
-	if request.Confirm {
-		component.Status = ds.FORMED
-		now := time.Now()
-		component.FormationDate = &now
-	} else {
-		component.Status = ds.DELETED
+	if request.Image != nil {
+		if component.ImageURL != nil {
+			if err := app.deleteImage(c, component.UUID); err != nil {
+				c.AbortWithError(http.StatusInternalServerError, err)
+				return
+			}
+		}
+		imageURL, err := app.uploadImage(c, request.Image, component.UUID)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		component.ImageURL = imageURL
+	}
+	if request.WorldName != nil {
+		component.WorldName = *request.WorldName
+	}
+	if request.Amount != nil {
+		component.Amount = *request.Amount
+	}
+	if request.Properties != nil {
+		component.Properties = *request.Properties
 	}
 
 	if err := app.repo.SaveComponent(component); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	c.Status(http.StatusOK)
+
+	c.JSON(http.StatusOK, component)
 }
 
-func (app *Application) ModeratorConfirm(c *gin.Context) {
-	var request schemes.ModeratorConfirmRequest
-	if err := c.ShouldBindUri(&request.URI); err != nil {
+func (app *Application) AddToMedicine(c *gin.Context) {
+	var request schemes.AddToMedicineRequest
+	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	if err := c.ShouldBind(&request); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
+	var err error
 
-	
-
-	component, err := app.repo.GetComponentById(request.URI.ComponentId, app.getCustomer())
+	component, err := app.repo.GetComponentByID(request.ComponentId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -205,23 +188,32 @@ func (app *Application) ModeratorConfirm(c *gin.Context) {
 		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
 		return
 	}
-	if component.Status != ds.FORMED {
-		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя изменить статус с \"%s\" на \"%s\"", component.Status,  ds.FORMED))
-		return
-	}
-	if request.Confirm {
-		component.Status = ds.COMPELTED
-		now := time.Now()
-		component.CompletionDate = &now
-	
-	} else {
-		component.Status = ds.REJECTED
-	}
-	component.ModeratorId = app.getModerator()
-	
-	if err := app.repo.SaveComponent(component); err != nil {
+
+	var medicine *ds.Medicine
+	medicine, err = app.repo.GetDraftMedicine(app.getCustomer())
+	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	c.Status(http.StatusOK)
+	if medicine == nil {
+		medicine, err = app.repo.CreateDraftMedicine(app.getCustomer())
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	}
+
+	if err = app.repo.AddToMedicine(medicine.UUID, request.ComponentId); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	var components []ds.Component
+	components, err = app.repo.GetMedicineProduction(medicine.UUID)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, schemes.AllComponentsResponse{Components: components})
 }

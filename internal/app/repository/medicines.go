@@ -3,15 +3,35 @@ package repository
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
 	"lab3/internal/app/ds"
 )
 
-func (r *Repository) GetMedicineByID(id string) (*ds.Medicine, error) {
-	medicine := &ds.Medicine{UUID: id}
-	err := r.db.First(medicine, "is_deleted = ?", false).Error
+func (r *Repository) GetAllMedicines(formationDateStart, formationDateEnd *time.Time, status string) ([]ds.Medicine, error) {
+	var medicines []ds.Medicine
+	query := r.db.Preload("Customer").Preload("Moderator").
+		Where("LOWER(status) LIKE ?", "%"+strings.ToLower(status)+"%").
+		Where("status != ?", ds.DELETED)
+
+	if formationDateStart != nil && formationDateEnd != nil {
+		query = query.Where("formation_date BETWEEN ? AND ?", *formationDateStart, *formationDateEnd)
+	} else if formationDateStart != nil {
+		query = query.Where("formation_date >= ?", *formationDateStart)
+	} else if formationDateEnd != nil {
+		query = query.Where("formation_date <= ?", *formationDateEnd)
+	}
+	if err := query.Find(&medicines).Error; err != nil {
+		return nil, err
+	}
+	return medicines, nil
+}
+
+func (r *Repository) GetDraftMedicine(customerId string) (*ds.Medicine, error) {
+	medicine := &ds.Medicine{}
+	err := r.db.First(medicine, ds.Medicine{Status: ds.DRAFT, CustomerId: customerId}).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -21,26 +41,42 @@ func (r *Repository) GetMedicineByID(id string) (*ds.Medicine, error) {
 	return medicine, nil
 }
 
-func (r *Repository) AddMedicine(medicine *ds.Medicine) error {
-	err := r.db.Create(&medicine).Error
+func (r *Repository) CreateDraftMedicine(customerId string) (*ds.Medicine, error) {
+	medicine := &ds.Medicine{CreationDate: time.Now(), CustomerId: customerId, Status: ds.DRAFT}
+	err := r.db.Create(medicine).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return medicine, nil
 }
 
-func (r *Repository) GetMedicineByName(Name string) ([]ds.Medicine, error) {
-	var medicines []ds.Medicine
+func (r *Repository) GetMedicineById(medicineId, customerId string) (*ds.Medicine, error) {
+	medicine := &ds.Medicine{}
+	err := r.db.Preload("Moderator").Preload("Customer").
+		Where("status != ?", ds.DELETED).
+		First(medicine, ds.Medicine{UUID: medicineId, CustomerId: customerId}).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return medicine, nil
+}
 
-	err := r.db.
-		Where("LOWER(name) LIKE ?", "%"+strings.ToLower(Name)+"%").Where("is_deleted = ?", false).
-		Find(&medicines).Error
+func (r *Repository) GetMedicineProduction(medicineId string) ([]ds.Component, error) {
+	var components []ds.Component
+
+	err := r.db.Table("medicine_contents").
+		Select("components.*").
+		Joins("JOIN components ON medicine_contents.component_id = components.uuid").
+		Where(ds.MedicineProduction{MedicineId: medicineId}).
+		Scan(&components).Error
 
 	if err != nil {
 		return nil, err
 	}
-
-	return medicines, nil
+	return components, nil
 }
 
 func (r *Repository) SaveMedicine(medicine *ds.Medicine) error {
@@ -51,9 +87,8 @@ func (r *Repository) SaveMedicine(medicine *ds.Medicine) error {
 	return nil
 }
 
-func (r *Repository) AddToComponent(componentId, medicineId string) error {
-	MedProd := ds.MedicineProduction{ComponentId: componentId, MedicineId: medicineId}
-	err := r.db.Create(&MedProd).Error
+func (r *Repository) DeleteFromMedicine(medicineId, componentId string) error {
+	err := r.db.Delete(&ds.MedicineProduction{MedicineId: medicineId, ComponentId: componentId}).Error
 	if err != nil {
 		return err
 	}

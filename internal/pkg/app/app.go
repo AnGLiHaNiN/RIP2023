@@ -29,21 +29,21 @@ func (app *Application) Run() {
 	r.Use(ErrorHandler())
 
 	// Услуги - получатели
-	r.GET("/api/medicines", app.GetAllMedicines)                                     // Список с поиском
-	r.GET("/api/medicines/:medicine_id", app.GetMedicine)                           // Одна услуга
-	r.DELETE("/api/medicines/:medicine_id", app.DeleteMedicine)              // Удаление
-	r.PUT("/api/medicines/:medicine_id", app.ChangeMedicine)                 // Изменение
-	r.POST("/api/medicines", app.AddMedicine)                                    // Добавление
-	r.POST("/api/medicines/:medicine_id/add_to_component", app.AddToComponent) // Добавление в заявку
+	r.GET("/api/components", app.GetAllComponents)                                     // Список с поиском
+	r.GET("/api/components/:component_id", app.GetComponent)                           // Одна услуга
+	r.DELETE("/api/components/:component_id", app.DeleteComponent)              // Удаление
+	r.PUT("/api/components/:component_id", app.ChangeComponent)                 // Изменение
+	r.POST("/api/components", app.AddComponent)                                    // Добавление
+	r.POST("/api/components/:component_id/add_to_medicine", app.AddToMedicine) // Добавление в заявку
 
 	// Заявки - уведомления
-	r.GET("/api/components", app.GetAllComponents)                                                       // Список (отфильтровать по дате формирования и статусу)
-	r.GET("/api/components/:component_id", app.GetComponent)                                          // Одна заявка
-	r.PUT("/api/components/:component_id/update", app.UpdateComponent)                                // Изменение (добавление транспорта)
-	r.DELETE("/api/components/:component_id", app.DeleteComponent)                             //Удаление
-	r.DELETE("/api/components/:component_id/delete_medicine/:medicine_id", app.DeleteFromComponent) // Изменеие (удаление услуг)
-	r.PUT("/api/components/:component_id/user_confirm", app.UserConfirm)                                 // Сформировать создателем
-	r.PUT("/api/components/:component_id/moderator_confirm", app.ModeratorConfirm)                        // Завершить отклонить модератором
+	r.GET("/api/medicines", app.GetAllMedicines)                                                       // Список (отфильтровать по дате формирования и статусу)
+	r.GET("/api/medicines/:medicine_id", app.GetMedicine)                                          // Одна заявка
+	r.PUT("/api/medicines/:medicine_id/update", app.UpdateMedicine)                                // Изменение (добавление транспорта)
+	r.DELETE("/api/medicines/:medicine_id", app.DeleteMedicine)                             //Удаление
+	r.DELETE("/api/medicines/:medicine_id/delete_component/:component_id", app.DeleteFromMedicine) // Изменеие (удаление услуг)
+	r.PUT("/api/medicines/:medicine_id/user_confirm", app.UserConfirm)                                 // Сформировать создателем
+	r.PUT("/api/medicines/:medicine_id/moderator_confirm", app.ModeratorConfirm)                        // Завершить отклонить модератором
 
 	r.Static("/image", "./resources")
 	r.Static("/css", "./static/css")

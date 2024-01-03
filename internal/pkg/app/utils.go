@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+
 	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
@@ -44,10 +45,10 @@ func (app *Application) deleteImage(c *gin.Context, UUID string) error {
 }
 
 func (app *Application) getCustomer() string {
-	return "ec62488b-29eb-4484-be7a-1ef79454a2a0"
+	return "2d217868-ab6d-41fe-9b34-7809083a2e8a"
 }
 
 func (app *Application) getModerator() *string {
-	moderaorId := "dabad2aa-e7e2-4947-87a2-9fbbdb05a860"
+	moderaorId := "87d54d58-1e24-4cca-9c83-bd2523902729"
 	return &moderaorId
 }

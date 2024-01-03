@@ -4,34 +4,34 @@ import (
 	"lab3/internal/app/ds"
 )
 
-type AllMedicinesResponse struct {
-	Medicines []ds.Medicine `json:"medicines"`
-}
-
-type ComponentShort struct {
-	UUID           string `json:"uuid"`
-	MedicineCount int    `json:"medicine_count"`
-}
-
-type GetAllMedicinesResponse struct {
-	DraftComponent *ComponentShort         `json:"draft_component"`
-	Medicines            []ds.Medicine `json:"medicines"`
-}
-
 type AllComponentsResponse struct {
-	Components []ComponentOutput `json:"components"`
+	Components []ds.Component `json:"components"`
 }
 
-type ComponentResponse struct {
-	Component ComponentOutput `json:"component"`
-	Medicines    []ds.Medicine  `json:"medicines"`
+type MedicineShort struct {
+	UUID           string `json:"uuid"`
+	ComponentCount int    `json:"component_count"`
 }
 
-type UpdateComponentResponse struct {
-	Component ComponentOutput  `json:"components"`
+type GetAllComponentsResponse struct {
+	DraftMedicine *MedicineShort         `json:"draft_medicine"`
+	Components            []ds.Component `json:"components"`
 }
 
-type ComponentOutput struct {
+type AllMedicinesResponse struct {
+	Medicines []MedicineOutput `json:"medicines"`
+}
+
+type MedicineResponse struct {
+	Medicine MedicineOutput `json:"medicine"`
+	Components    []ds.Component  `json:"components"`
+}
+
+type UpdateMedicineResponse struct {
+	Medicine MedicineOutput  `json:"medicines"`
+}
+
+type MedicineOutput struct {
 	UUID           string  `json:"uuid"`
 	Status         string  `json:"status"`
 	CreationDate   string  `json:"creation_date"`
@@ -39,30 +39,30 @@ type ComponentOutput struct {
 	CompletionDate *string `json:"completion_date"`
 	Moderator      *string `json:"moderator"`
 	Customer       string  `json:"customer"`
-	ComponentName  string  `json:"component_name"`
+	MedicineName      string  `json:"medicine_type"`
 }
 
-func ConvertComponent(component *ds.Component) ComponentOutput {
-	output := ComponentOutput{
-		UUID:         component.UUID,
-		Status:       component.Status,
-		CreationDate: component.CreationDate.Format("2006-01-02 15:04:05"),
-		ComponentName:    component.ComponentName,
-		Customer:     component.Customer.Name,
+func ConvertMedicine(medicine *ds.Medicine) MedicineOutput {
+	output := MedicineOutput{
+		UUID:         medicine.UUID,
+		Status:       medicine.Status,
+		CreationDate: medicine.CreationDate.Format("2006-01-02 15:04:05"),
+		MedicineName:    medicine.MedicineName,
+		Customer:     medicine.Customer.Name,
 	}
 
-	if component.FormationDate != nil {
-		formationDate := component.FormationDate.Format("2006-01-02 15:04:05")
+	if medicine.FormationDate != nil {
+		formationDate := medicine.FormationDate.Format("2006-01-02 15:04:05")
 		output.FormationDate = &formationDate
 	}
 
-	if component.CompletionDate != nil {
-		completionDate := component.CompletionDate.Format("2006-01-02 15:04:05")
+	if medicine.CompletionDate != nil {
+		completionDate := medicine.CompletionDate.Format("2006-01-02 15:04:05")
 		output.CompletionDate = &completionDate
 	}
 
-	if component.Moderator != nil {
-		output.Moderator = &component.Moderator.Name
+	if medicine.Moderator != nil {
+		output.Moderator = &medicine.Moderator.Name
 	}
 
 	return output
