@@ -38,26 +38,26 @@ func (app *Application) Run() {
 	// Услуги - лекарства
 	api := r.Group("/api")
 	{
-		medicines := api.Group("/medicines")
+		components := api.Group("/components")
 		{
-			medicines.GET("/", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetAllMedicines)                     // Список с поиском
-			medicines.GET("/:medicine_id", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetMedicine)            // Одна услуга
-			medicines.DELETE("/:medicine_id", app.WithAuthCheck(role.Moderator), app.DeleteMedicine)                         				// Удаление
-			medicines.PUT("/:medicine_id", app.WithAuthCheck(role.Moderator), app.ChangeMedicine)                            				// Изменение
-			medicines.POST("/", app.WithAuthCheck(role.Moderator), app.AddMedicine)                                           				// Добавление
-			medicines.POST("/:medicine_id/add_to_component", app.WithAuthCheck(role.Customer,role.Moderator), app.AddToComponent) 					// Добавление в заявку
+			components.GET("/", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetAllComponents)                     // Список с поиском
+			components.GET("/:component_id", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetComponent)            // Одна услуга
+			components.DELETE("/:component_id", app.WithAuthCheck(role.Moderator), app.DeleteComponent)                         				// Удаление
+			components.PUT("/:component_id", app.WithAuthCheck(role.Moderator), app.ChangeComponent)                            				// Изменение
+			components.POST("/", app.WithAuthCheck(role.Moderator), app.AddComponent)                                           				// Добавление
+			components.POST("/:component_id/add_to_medicine", app.WithAuthCheck(role.Customer,role.Moderator), app.AddToMedicine) 					// Добавление в заявку
 		}
 
 		// Заявки - компоненты
-		components := api.Group("/components")
+		medicines := api.Group("/medicines")
 		{
-			components.GET("/", app.WithAuthCheck(role.Customer, role.Moderator), app.GetAllComponents)                                         				  // Список (отфильтровать по дате формирования и статусу)
-			components.GET("/:component_id",app.WithAuthCheck(role.Customer, role.Moderator),  app.GetComponent)                             				  // Одна заявка
-			components.PUT("/:component_id/update", app.WithAuthCheck(role.Customer, role.Moderator), app.UpdateComponent)                                	  // Изменение (добавление транспорта)
-			components.DELETE("/:component_id", app.WithAuthCheck(role.Customer,role.Moderator), app.DeleteComponent)                                      				  // Удаление
-			components.DELETE("/:component_id/delete_medicine/:medicine_id", app.WithAuthCheck(role.Customer, role.Moderator), app.DeleteFromComponent) 	  // Изменеие (удаление услуг)
-			components.PUT("/user_confirm", app.WithAuthCheck(role.Customer, role.Moderator), app.UserConfirm)                                    				  // Сформировать создателем
-			components.PUT("/:component_id/moderator_confirm", app.WithAuthCheck(role.Moderator), app.ModeratorConfirm)                         				  // Завершить отклонить модератором
+			medicines.GET("/", app.WithAuthCheck(role.Customer, role.Moderator), app.GetAllMedicines)                                         				  // Список (отфильтровать по дате формирования и статусу)
+			medicines.GET("/:medicine_id",app.WithAuthCheck(role.Customer, role.Moderator),  app.GetMedicine)                             				  // Одна заявка
+			medicines.PUT("/:medicine_id/update", app.WithAuthCheck(role.Customer, role.Moderator), app.UpdateMedicine)                                	  // Изменение (добавление транспорта)
+			medicines.DELETE("/:medicine_id", app.WithAuthCheck(role.Customer,role.Moderator), app.DeleteMedicine)                                      				  // Удаление
+			medicines.DELETE("/:medicine_id/delete_component/:component_id", app.WithAuthCheck(role.Customer, role.Moderator), app.DeleteFromMedicine) 	  // Изменеие (удаление услуг)
+			medicines.PUT("/user_confirm", app.WithAuthCheck(role.Customer, role.Moderator), app.UserConfirm)                                    				  // Сформировать создателем
+			medicines.PUT("/:medicine_id/moderator_confirm", app.WithAuthCheck(role.Moderator), app.ModeratorConfirm)                         				  // Завершить отклонить модератором
 		}
 
 		// Пользователи (авторизация)

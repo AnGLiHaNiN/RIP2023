@@ -27,7 +27,7 @@ func (app *Application) WithAuthCheck(assignedRoles ...role.Role) func(ctx *gin.
 			return                      
 		}
 
-		// отрезаем префикс
+
 		jwtStr = jwtStr[len(jwtPrefix):]
 
 		err := app.redisClient.CheckJWTInBlacklist(c.Request.Context(), jwtStr)
@@ -35,7 +35,7 @@ func (app *Application) WithAuthCheck(assignedRoles ...role.Role) func(ctx *gin.
 			c.AbortWithStatus(http.StatusForbidden)
 			return
 		}
-		if !errors.Is(err, redis.Nil) { // значит что это не ошибка отсуствия - внутренняя ошибка
+		if !errors.Is(err, redis.Nil) { 
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}

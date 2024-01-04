@@ -19,17 +19,17 @@ type User struct {
 	// The SHA-1 hash is 20 bytes. When encoded in hexadecimal, each byte is represented by two characters. Therefore, the resulting hash string will be 40 characters long
 }
 
-type Medicine struct {
+type Component struct {
 	UUID      		string  `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"uuid" binding:"-"`
 	Name       		string  `gorm:"size:100;not null" form:"name" json:"name" binding:"required"`
 	ImageURL  		*string `gorm:"size:100" json:"image_url" binding:"-"`
-	Dosage     		string  `gorm:"size:75;not null" form:"dosage" json:"dosage" binding:"required"`
+	WorldName     		string  `gorm:"size:75;not null" form:"world_name" json:"world_name" binding:"required"`
 	Amount       	int     `gorm:"not null" json:"amount" form:"amount" binding:"required"`
-	Manufacturer    string  `gorm:"size:100;not null" form:"manufacturer" json:"manufacturer" binding:"required"`
+	Properties    string  `gorm:"size:100;not null" form:"properties" json:"properties" binding:"required"`
 	IsDeleted 		bool    `gorm:"not null;default:false" json:"-" binding:"-"`
 }
 
-type Component struct {
+type Medicine struct {
 	UUID             string     `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Status           string     `gorm:"size:20;not null"`
 	CreationDate     time.Time  `gorm:"not null;type:timestamp"`
@@ -37,7 +37,7 @@ type Component struct {
 	CompletionDate   *time.Time `gorm:"type:timestamp"`
 	ModeratorId      *string    `json:"-"`
 	CustomerId       string     `gorm:"not null"`
-	ComponentName string     	`gorm:"size:50;not null"`
+	MedicineName string     	`gorm:"size:50;not null"`
 
 	Moderator *User
 	Customer  User

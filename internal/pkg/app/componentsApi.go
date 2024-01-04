@@ -13,17 +13,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary		Получить все компоненты
-// @Tags		Компоненты
-// @Description	Возвращает все компоненты с фильтрацией по статусу и дате формирования
+// @Summary		Получить все лекарства
+// @Tags		Лекарства
+// @Description	Возвращает все лекарства с фильтрацией по статусу и дате формирования
 // @Produce		json
-// @Param		status query string false "статус компонента"
+// @Param		status query string false "статус лекарствоа"
 // @Param		formation_date_start query string false "начальная дата формирования"
 // @Param		formation_date_end query string false "конечная дата формирвания"
-// @Success		200 {object} schemes.AllComponentsResponse
-// @Router		/api/components [get]
-func (app *Application) GetAllComponents(c *gin.Context) {
-	var request schemes.GetAllComponentsRequst
+// @Success		200 {object} schemes.AllMedicinesResponse
+// @Router		/api/medicines [get]
+func (app *Application) GetAllMedicines(c *gin.Context) {
+	var request schemes.GetAllMedicinesRequst
 	var err error
 	if err = c.ShouldBindQuery(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -33,33 +33,33 @@ func (app *Application) GetAllComponents(c *gin.Context) {
 	userId := getUserId(c)
 	userRole := getUserRole(c)
 	fmt.Println(userId, userRole)
-	var components []ds.Component
+	var medicines []ds.Medicine
 	if userRole == role.Customer {
-		components, err = app.repo.GetAllComponents(&userId, request.FormationDateStart, request.FormationDateEnd, request.Status)
+		medicines, err = app.repo.GetAllMedicines(&userId, request.FormationDateStart, request.FormationDateEnd, request.Status)
 	} else {
-		components, err = app.repo.GetAllComponents(nil, request.FormationDateStart, request.FormationDateEnd, request.Status)
+		medicines, err = app.repo.GetAllMedicines(nil, request.FormationDateStart, request.FormationDateEnd, request.Status)
 	}
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	outputComponents := make([]schemes.ComponentOutput, len(components))
-	for i, component := range components {
-		outputComponents[i] = schemes.ConvertComponent(&component)
+	outputMedicines := make([]schemes.MedicineOutput, len(medicines))
+	for i, medicine := range medicines {
+		outputMedicines[i] = schemes.ConvertMedicine(&medicine)
 	}
-	c.JSON(http.StatusOK, schemes.AllComponentsResponse{Components: outputComponents})
+	c.JSON(http.StatusOK, schemes.AllMedicinesResponse{Medicines: outputMedicines})
 }
 
-// @Summary		Получить один компонент
-// @Tags		Компоненты
-// @Description	Возвращает подробную информацию о компоненте и его названии
+// @Summary		Получить одно лекарство
+// @Tags		Лекарства
+// @Description	Возвращает подробную информацию о лекарстве и его названии
 // @Produce		json
-// @Param		component_id path string true "id компонента"
-// @Success		200 {object} schemes.ComponentResponse
-// @Router		/api/components/{component_id} [get]
-func (app *Application) GetComponent(c *gin.Context) {
-	var request schemes.ComponentRequest
+// @Param		medicine_id path string true "id лекарствоа"
+// @Success		200 {object} schemes.MedicineResponse
+// @Router		/api/medicines/{medicine_id} [get]
+func (app *Application) GetMedicine(c *gin.Context) {
+	var request schemes.MedicineRequest
 	var err error
 	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -68,44 +68,44 @@ func (app *Application) GetComponent(c *gin.Context) {
 
 	userId := getUserId(c)
 	userRole := getUserRole(c)
-	var component *ds.Component
+	var medicine *ds.Medicine
 	if userRole == role.Moderator {
-		component, err = app.repo.GetComponentById(request.ComponentId, nil)
+		medicine, err = app.repo.GetMedicineById(request.MedicineId, nil)
 	} else {
-		component, err = app.repo.GetComponentById(request.ComponentId, &userId)
+		medicine, err = app.repo.GetMedicineById(request.MedicineId, &userId)
 	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
+	if medicine == nil {
+		c.AbortWithError(http.StatusNotFound, fmt.Errorf("лекарство не найдено"))
 		return
 	}
 
-	medicines, err := app.repo.GetMedicineProduction(request.ComponentId)
+	components, err := app.repo.GetMedicineProduction(request.MedicineId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	c.JSON(http.StatusOK, schemes.ComponentResponse{Component: schemes.ConvertComponent(component), Medicines: medicines})
+	c.JSON(http.StatusOK, schemes.MedicineResponse{Medicine: schemes.ConvertMedicine(medicine), Components: components})
 }
 
-type SwaggerUpdateComponentRequest struct {
-	ComponentType string `json:"component_type"`
+type SwaggerUpdateMedicineRequest struct {
+	MedicineType string `json:"medicine_type"`
 }
 
-// @Summary		Указать название компонента
-// @Tags		Компоненты
-// @Description	Позволяет изменить название компонента и возвращает обновлённые данные
+// @Summary		Указать название лекарства
+// @Tags		Лекарства
+// @Description	Позволяет изменить название лекарства и возвращает обновлённые данные
 // @Access		json
 // @Produce		json
-// @Param		component_id path string true "id компонента"
-// @Param		component_name body SwaggerUpdateComponentRequest true "Название компонента"
-// @Success		200 {object} schemes.UpdateComponentResponse
-// @Router		/api/components/{component_id} [put]
-func (app *Application) UpdateComponent(c *gin.Context) {
-	var request schemes.UpdateComponentRequest
+// @Param		medicine_id path string true "id лекарствоа"
+// @Param		medicine_name body SwaggerUpdateMedicineRequest true "Название лекарствоа"
+// @Success		200 {object} schemes.UpdateMedicineResponse
+// @Router		/api/medicines/{medicine_id} [put]
+func (app *Application) UpdateMedicine(c *gin.Context) {
+	var request schemes.UpdateMedicineRequest
 	if err := c.ShouldBindUri(&request.URI); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -115,33 +115,33 @@ func (app *Application) UpdateComponent(c *gin.Context) {
 		return
 	}
 	userId := getUserId(c)
-	component, err := app.repo.GetComponentById(request.URI.ComponentId, &userId)
+	medicine, err := app.repo.GetMedicineById(request.URI.MedicineId, &userId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
+	if medicine == nil {
+		c.AbortWithError(http.StatusNotFound, fmt.Errorf("лекарство не найдено"))
 		return
 	}
-	component.ComponentName = request.ComponentName
-	if app.repo.SaveComponent(component); err != nil {
+	medicine.MedicineName = request.MedicineName
+	if app.repo.SaveMedicine(medicine); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, schemes.UpdateComponentResponse{Component:schemes.ConvertComponent(component)})
+	c.JSON(http.StatusOK, schemes.UpdateMedicineResponse{Medicine:schemes.ConvertMedicine(medicine)})
 }
 
-// @Summary		Удалить компонент
-// @Tags		Компоненты
-// @Description	Удаляет компонент по id
-// @Param		component_id path string true "id компонента"
+// @Summary		Удалить лекарство
+// @Tags		Лекарства
+// @Description	Удаляет лекарство по id
+// @Param		medicine_id path string true "id лекарства"
 // @Success		200
-// @Router		/api/components/{component_id} [delete]
-func (app *Application) DeleteComponent(c *gin.Context) {
+// @Router		/api/medicines/{medicine_id} [delete]
+func (app *Application) DeleteMedicine(c *gin.Context) {
 	var err error
-	var request schemes.ComponentRequest
+	var request schemes.MedicineRequest
 	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -149,122 +149,122 @@ func (app *Application) DeleteComponent(c *gin.Context) {
 
 	userId := getUserId(c)
 	userRole := getUserRole(c)
-	var component *ds.Component
+	var medicine *ds.Medicine
 	if userRole == role.Moderator {
-		component, err = app.repo.GetComponentById(request.ComponentId, nil)
+		medicine, err = app.repo.GetMedicineById(request.MedicineId, nil)
 	} else {
-		component, err = app.repo.GetComponentById(request.ComponentId, &userId)
+		medicine, err = app.repo.GetMedicineById(request.MedicineId, &userId)
 	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
+	if medicine == nil {
+		c.AbortWithError(http.StatusNotFound, fmt.Errorf("лекарство не найдено"))
 		return
 	}
 
-	if userRole == role.Customer && component.Status != ds.DRAFT {
-		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("компонент уже сформирован"))
+	if userRole == role.Customer && medicine.Status != ds.DRAFT {
+		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("лекарство уже сформировано"))
 		return
 	}
-	component.Status = ds.DELETED
+	medicine.Status = ds.DELETED
 
-	if err := app.repo.SaveComponent(component); err != nil {
+	if err := app.repo.SaveMedicine(medicine); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.Status(http.StatusOK)
 }
 
-// @Summary		Удалить лекарство из компонента
-// @Tags		Компоненты
-// @Description	Удалить лекарство из компонента
+// @Summary		Удалить компонент из лекарства
+// @Tags		Лекарства
+// @Description	Удалить компонент из лекарства
 // @Produce		json
-// @Param		component_id path string true "id компонента"
 // @Param		medicine_id path string true "id лекарства"
-// @Success		200 {object} schemes.AllMedicinesResponse
-// @Router		/api/components/{component_id}/delete_medicine/{medicine_id} [delete]
-func (app *Application) DeleteFromComponent(c *gin.Context) {
+// @Param		component_id path string true "id компонента"
+// @Success		200 {object} schemes.AllComponentsResponse
+// @Router		/api/medicines/{medicine_id}/delete_component/{component_id} [delete]
+func (app *Application) DeleteFromMedicine(c *gin.Context) {
 	var err error
-	var request schemes.DeleteFromComponentRequest
+	var request schemes.DeleteFromMedicineRequest
 	if err := c.ShouldBindUri(&request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	userId := getUserId(c)
 	userRole := getUserRole(c)
-	var component *ds.Component
+	var medicine *ds.Medicine
 	if userRole == role.Moderator {
-		component, err = app.repo.GetComponentById(request.ComponentId, nil)
+		medicine, err = app.repo.GetMedicineById(request.MedicineId, nil)
 	} else {
-		component, err = app.repo.GetComponentById(request.ComponentId, &userId)
+		medicine, err = app.repo.GetMedicineById(request.MedicineId, &userId)
 	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
+	if medicine == nil {
+		c.AbortWithError(http.StatusNotFound, fmt.Errorf("лекарство не найдено"))
 		return
 	}
-	if component.Status != ds.DRAFT {
-		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя редактировать компонент со статусом: %s", component.Status))
+	if medicine.Status != ds.DRAFT {
+		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя редактировать лекарство со статусом: %s", medicine.Status))
 		return
 	}
 
-	if err := app.repo.DeleteFromComponent(request.ComponentId, request.MedicineId); err != nil {
+	if err := app.repo.DeleteFromMedicine(request.MedicineId, request.ComponentId); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	medicines, err := app.repo.GetMedicineProduction(request.ComponentId)
+	components, err := app.repo.GetMedicineProduction(request.MedicineId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, schemes.AllMedicinesResponse{Medicines: medicines})
+	c.JSON(http.StatusOK, schemes.AllComponentsResponse{Components: components})
 }
 
-// @Summary		Сформировать компонент
-// @Tags		Компоненты
-// @Description	Сформировать или удалить компонент пользователем
+// @Summary		Сформировать лекарство
+// @Tags		Лекарства
+// @Description	Сформировать или удалить лекарство пользователем
 // @Success		200
-// @Router		/api/components/user_confirm [put]
+// @Router		/api/medicines/user_confirm [put]
 func (app *Application) UserConfirm(c *gin.Context) {
 	userId := getUserId(c)
-	component, err := app.repo.GetDraftComponent(userId)
+	medicine, err := app.repo.GetDraftMedicine(userId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
+	if medicine == nil {
+		c.AbortWithError(http.StatusNotFound, fmt.Errorf("лекарство не найден"))
 		return
 	}
-	if component.Status != ds.DRAFT {
-		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя сформировать компонент со статусом %s", component.Status))
+	if medicine.Status != ds.DRAFT {
+		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя сформировать лекарство со статусом %s", medicine.Status))
 		return
 	}
-	component.Status = ds.FORMED
+	medicine.Status = ds.FORMED
 	now := time.Now()
-	component.FormationDate = &now
+	medicine.FormationDate = &now
 
-	if err := app.repo.SaveComponent(component); err != nil {
+	if err := app.repo.SaveMedicine(medicine); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.Status(http.StatusOK)
 }
 
-// @Summary		Подтвердить компонент
-// @Tags		Компоненты
-// @Description	Подтвердить или отменить компонент модератором
-// @Param		component_id path string true "id компонента"
+// @Summary		Подтвердить лекарство
+// @Tags		Лекарства
+// @Description	Подтвердить или отменить лекарство модератором
+// @Param		medicine_id path string true "id лекарства"
 // @Param		confirm body boolean true "подтвердить"
 // @Success		200
-// @Router		/api/components/{component_id}/moderator_confirm [put]
+// @Router		/api/medicines/{medicine_id}/moderator_confirm [put]
 func (app *Application) ModeratorConfirm(c *gin.Context) {
 	var request schemes.ModeratorConfirmRequest
 	if err := c.ShouldBindUri(&request.URI); err != nil {
@@ -277,32 +277,32 @@ func (app *Application) ModeratorConfirm(c *gin.Context) {
 	}
 
 	userId := getUserId(c)
-	component, err := app.repo.GetComponentById(request.URI.ComponentId,nil)
+	medicine, err := app.repo.GetMedicineById(request.URI.MedicineId,nil)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if component == nil {
-		c.AbortWithError(http.StatusNotFound, fmt.Errorf("компонент не найден"))
+	if medicine == nil {
+		c.AbortWithError(http.StatusNotFound, fmt.Errorf("лекарство не найдено"))
 		return
 	}
-	if component.Status != ds.FORMED {
-		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя изменить статус с \"%s\" на \"%s\"", component.Status,  ds.FORMED))
+	if medicine.Status != ds.FORMED {
+		c.AbortWithError(http.StatusMethodNotAllowed, fmt.Errorf("нельзя изменить статус с \"%s\" на \"%s\"", medicine.Status,  ds.FORMED))
 		return
 	}
 
 
 	if request.Confirm {
-		component.Status = ds.COMPELTED
+		medicine.Status = ds.COMPELTED
 		now := time.Now()
-		component.CompletionDate = &now
+		medicine.CompletionDate = &now
 	
 	} else {
-		component.Status = ds.REJECTED
+		medicine.Status = ds.REJECTED
 	}
-	component.ModeratorId = &userId
+	medicine.ModeratorId = &userId
 	
-	if err := app.repo.SaveComponent(component); err != nil {
+	if err := app.repo.SaveMedicine(medicine); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
