@@ -14,7 +14,6 @@ type MedicineShort struct {
 }
 
 type GetAllComponentsResponse struct {
-	DraftMedicine *MedicineShort         `json:"draft_medicine"`
 	Components            []ds.Component `json:"components"`
 }
 

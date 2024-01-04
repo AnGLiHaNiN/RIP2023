@@ -28,7 +28,7 @@ func (app *Application) Run() {
 
 	r.Use(ErrorHandler())
 
-	// Услуги - получатели
+	// Услуги - компоненты
 	r.GET("/api/components", app.GetAllComponents)                                     // Список с поиском
 	r.GET("/api/components/:component_id", app.GetComponent)                           // Одна услуга
 	r.DELETE("/api/components/:component_id", app.DeleteComponent)              // Удаление
@@ -36,7 +36,7 @@ func (app *Application) Run() {
 	r.POST("/api/components", app.AddComponent)                                    // Добавление
 	r.POST("/api/components/:component_id/add_to_medicine", app.AddToMedicine) // Добавление в заявку
 
-	// Заявки - уведомления
+	// Заявки - лекарства
 	r.GET("/api/medicines", app.GetAllMedicines)                                                       // Список (отфильтровать по дате формирования и статусу)
 	r.GET("/api/medicines/:medicine_id", app.GetMedicine)                                          // Одна заявка
 	r.PUT("/api/medicines/:medicine_id/update", app.UpdateMedicine)                                // Изменение (добавление транспорта)

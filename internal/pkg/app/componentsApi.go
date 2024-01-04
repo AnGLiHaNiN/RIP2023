@@ -7,7 +7,6 @@ import (
 	"lab3/internal/app/ds"
 	"lab3/internal/app/schemes"
 
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,21 +22,12 @@ func (app *Application) GetAllComponents(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	draftMedicine, err := app.repo.GetDraftMedicine(app.getCustomer())
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	response := schemes.GetAllComponentsResponse{DraftMedicine: nil, Components: components}
-	if draftMedicine != nil {
-		response.DraftMedicine = &schemes.MedicineShort{UUID: draftMedicine.UUID}
-		components, err := app.repo.GetMedicineProduction(draftMedicine.UUID)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		response.DraftMedicine.ComponentCount = len(components)
-	}
+	response := schemes.GetAllComponentsResponse{Components: components}
+	
 	c.JSON(http.StatusOK, response)
 }
 
@@ -178,7 +168,6 @@ func (app *Application) AddToMedicine(c *gin.Context) {
 		return
 	}
 	var err error
-
 	component, err := app.repo.GetComponentByID(request.ComponentId)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)

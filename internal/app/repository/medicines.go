@@ -14,7 +14,7 @@ func (r *Repository) GetAllMedicines(formationDateStart, formationDateEnd *time.
 	var medicines []ds.Medicine
 	query := r.db.Preload("Customer").Preload("Moderator").
 		Where("LOWER(status) LIKE ?", "%"+strings.ToLower(status)+"%").
-		Where("status != ?", ds.DELETED)
+		Where("status != ? and status != ?", ds.DELETED,ds.DRAFT)
 
 	if formationDateStart != nil && formationDateEnd != nil {
 		query = query.Where("formation_date BETWEEN ? AND ?", *formationDateStart, *formationDateEnd)
@@ -67,9 +67,9 @@ func (r *Repository) GetMedicineById(medicineId, customerId string) (*ds.Medicin
 func (r *Repository) GetMedicineProduction(medicineId string) ([]ds.Component, error) {
 	var components []ds.Component
 
-	err := r.db.Table("medicine_contents").
+	err := r.db.Table("medicine_productions").
 		Select("components.*").
-		Joins("JOIN components ON medicine_contents.component_id = components.uuid").
+		Joins("JOIN components ON medicine_productions.component_id = components.uuid").
 		Where(ds.MedicineProduction{MedicineId: medicineId}).
 		Scan(&components).Error
 
