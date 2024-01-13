@@ -1,92 +1,57 @@
 basePath: /
 definitions:
-  app.SwaggerUpdateComponentRequest:
+  app.SwaggerUpdateMedicineRequest:
     properties:
-      component_type:
+      medicine_type:
         type: string
     type: object
-  ds.Medicine:
+  ds.Component:
     properties:
       amount:
         type: integer
-      dosage:
-        type: string
       image_url:
-        type: string
-      manufacturer:
         type: string
       name:
         type: string
+      properties:
+        type: string
       uuid:
+        type: string
+      world_name:
         type: string
     required:
     - amount
-    - dosage
-    - manufacturer
     - name
+    - properties
+    - world_name
     type: object
-  schemes.AddToComponentResp:
+  schemes.AddToMedicineResp:
     properties:
-      medicine_count:
+      component_count:
         type: integer
     type: object
   schemes.AllComponentsResponse:
     properties:
       components:
         items:
-          $ref: '#/definitions/schemes.ComponentOutput'
+          $ref: '#/definitions/ds.Component'
         type: array
     type: object
   schemes.AllMedicinesResponse:
     properties:
       medicines:
         items:
-          $ref: '#/definitions/ds.Medicine'
+          $ref: '#/definitions/schemes.MedicineOutput'
         type: array
     type: object
-  schemes.ComponentOutput:
+  schemes.GetAllComponentsResponse:
     properties:
-      completion_date:
-        type: string
-      component_name:
-        type: string
-      creation_date:
-        type: string
-      customer:
-        type: string
-      formation_date:
-        type: string
-      moderator:
-        type: string
-      status:
-        type: string
-      uuid:
-        type: string
-    type: object
-  schemes.ComponentResponse:
-    properties:
-      component:
-        $ref: '#/definitions/schemes.ComponentOutput'
-      medicines:
+      components:
         items:
-          $ref: '#/definitions/ds.Medicine'
+          $ref: '#/definitions/ds.Component'
         type: array
-    type: object
-  schemes.ComponentShort:
-    properties:
-      medicine_count:
-        type: integer
-      uuid:
-        type: string
-    type: object
-  schemes.GetAllMedicinesResponse:
-    properties:
-      draft_component:
-        $ref: '#/definitions/schemes.ComponentShort'
-      medicines:
-        items:
-          $ref: '#/definitions/ds.Medicine'
-        type: array
+      draft_medicine:
+        $ref: '#/definitions/schemes.MedicineShort'
     type: object
   schemes.LoginReq:
     properties:
@@ -99,6 +64,41 @@ definitions:
     required:
     - login
     - password
+    type: object
+  schemes.MedicineOutput:
+    properties:
+      completion_date:
+        type: string
+      creation_date:
+        type: string
+      customer:
+        type: string
+      formation_date:
+        type: string
+      medicine_name:
+        type: string
+      moderator:
+        type: string
+      status:
+        type: string
+      uuid:
+        type: string
+    type: object
+  schemes.MedicineResponse:
+    properties:
+      components:
+        items:
+          $ref: '#/definitions/ds.Component'
+        type: array
+      medicine:
+        $ref: '#/definitions/schemes.MedicineOutput'
+    type: object
+  schemes.MedicineShort:
+    properties:
+      component_count:
+        type: integer
+      uuid:
+        type: string
     type: object
   schemes.RegisterReq:
     properties:
@@ -126,12 +126,12 @@ definitions:
       token_type:
         type: string
     type: object
-  schemes.UpdateComponentResponse:
+  schemes.UpdateMedicineResponse:
     properties:
-      components:
-        $ref: '#/definitions/schemes.ComponentOutput'
+      medicines:
+        $ref: '#/definitions/schemes.MedicineOutput'
     type: object
-host: 127.0.0.1:5000
+host: 127.0.0.1:8000
 info:
   contact: {}
   title: Electronic notifications
@@ -139,9 +139,152 @@ info:
 paths:
   /api/components:
     get:
-      description: Возвращает все компоненты с фильтрацией по статусу и дате формирования
+      description: Возвращает все доступные компоненты с опциональной фильтрацией
+        по Названию
       parameters:
-      - description: статус компонента
+      - description: Название для фильтрации
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemes.GetAllComponentsResponse'
+      summary: Получить все компоненты
+      tags:
+      - Компоненты
+  /api/components/:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Добавить новый компонент
+      parameters:
+      - description: Изображение компонента
+        in: formData
+        name: image
+        type: file
+      - description: Название
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Всемирное наименование
+        in: formData
+        name: world_name
+        required: true
+        type: string
+      - description: Количество
+        in: formData
+        name: amount
+        required: true
+        type: integer
+      - description: Свойства
+        in: formData
+        name: properties
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: Добавить компонент
+      tags:
+      - Компоненты
+  /api/components/{component_id}:
+    delete:
+      description: Удаляет лекраство по id
+      parameters:
+      - description: id компонента
+        in: path
+        name: component_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: Удалить компонент
+      tags:
+      - Компоненты
+    get:
+      description: Возвращает более подробную информацию об одном компоненте
+      parameters:
+      - description: id компонента
+        in: path
+        name: component_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Component'
+      summary: Получить один компонент
+      tags:
+      - Компоненты
+    put:
+      consumes:
+      - multipart/form-data
+      description: Изменить данные полей о компоненте
+      parameters:
+      - description: Идентификатор компонента
+        in: path
+        name: component_id
+        required: true
+        type: string
+      - description: Название
+        in: formData
+        name: name
+        type: string
+      - description: Всемирное наименование
+        in: formData
+        name: world_name
+        type: string
+      - description: Количество
+        in: formData
+        name: amount
+        type: integer
+      - description: Изображение компоненты
+        in: formData
+        name: image
+        type: file
+      - description: Свойства
+        in: formData
+        name: properties
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      summary: Изменить компонент
+      tags:
+      - Компоненты
+  /api/components/{component_id}/add_to_medicine:
+    post:
+      description: Добавить выбранный компонент в черновик лекарства
+      parameters:
+      - description: id компонента
+        in: path
+        name: component_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemes.AddToMedicineResp'
+      summary: Добавить в компонент
+      tags:
+      - Компоненты
+  /api/medicines:
+    get:
+      description: Возвращает все лекарства с фильтрацией по статусу и дате формирования
+      parameters:
+      - description: статус лекарствоа
         in: query
         name: status
         type: string
@@ -159,180 +302,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schemes.AllComponentsResponse'
-      summary: Получить все компоненты
-      tags:
-      - Компоненты
-  /api/components/{component_id}:
-    delete:
-      description: Удаляет компонент по id
-      parameters:
-      - description: id компонента
-        in: path
-        name: component_id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-      summary: Удалить компонент
-      tags:
-      - Компоненты
-    get:
-      description: Возвращает подробную информацию о компоненте и его названии
-      parameters:
-      - description: id компонента
-        in: path
-        name: component_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/schemes.ComponentResponse'
-      summary: Получить один компонент
-      tags:
-      - Компоненты
-    put:
-      description: Позволяет изменить название компонента и возвращает обновлённые
-        данные
-      parameters:
-      - description: id компонента
-        in: path
-        name: component_id
-        required: true
-        type: string
-      - description: Название компонента
-        in: body
-        name: component_name
-        required: true
-        schema:
-          $ref: '#/definitions/app.SwaggerUpdateComponentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/schemes.UpdateComponentResponse'
-      summary: Указать название компонента
-      tags:
-      - Компоненты
-  /api/components/{component_id}/delete_medicine/{medicine_id}:
-    delete:
-      description: Удалить лекарство из компонента
-      parameters:
-      - description: id компонента
-        in: path
-        name: component_id
-        required: true
-        type: string
-      - description: id лекарства
-        in: path
-        name: medicine_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
             $ref: '#/definitions/schemes.AllMedicinesResponse'
-      summary: Удалить лекарство из компонента
-      tags:
-      - Компоненты
-  /api/components/{component_id}/moderator_confirm:
-    put:
-      description: Подтвердить или отменить компонент модератором
-      parameters:
-      - description: id компонента
-        in: path
-        name: component_id
-        required: true
-        type: string
-      - description: подтвердить
-        in: body
-        name: confirm
-        required: true
-        schema:
-          type: boolean
-      responses:
-        "200":
-          description: OK
-      summary: Подтвердить компонент
-      tags:
-      - Компоненты
-  /api/components/user_confirm:
-    put:
-      description: Сформировать или удалить компонент пользователем
-      responses:
-        "200":
-          description: OK
-      summary: Сформировать компонент
-      tags:
-      - Компоненты
-  /api/medicines:
-    get:
-      description: Возвращает все доступные лекарства с опциональной фильтрацией по
-        Названию
-      parameters:
-      - description: Название для фильтрации
-        in: query
-        name: name
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/schemes.GetAllMedicinesResponse'
       summary: Получить все лекарства
-      tags:
-      - Лекарства
-  /api/medicines/:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Добавить новое лекарство
-      parameters:
-      - description: Изображение лекарства
-        in: formData
-        name: image
-        type: file
-      - description: Название
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: Производитель
-        in: formData
-        name: manufacturer
-        required: true
-        type: string
-      - description: Количество
-        in: formData
-        name: amount
-        required: true
-        type: integer
-      - description: Дозировка
-        in: formData
-        name: dosage
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-      summary: Добавить лекарство
       tags:
       - Лекарства
   /api/medicines/{medicine_id}:
     delete:
-      description: Удаляет лекраство по id
+      description: Удаляет лекарство по id
       parameters:
       - description: id лекарства
         in: path
@@ -346,9 +322,9 @@ paths:
       tags:
       - Лекарства
     get:
-      description: Возвращает более подробную информацию об одном лекарстве
+      description: Возвращает подробную информацию о лекарстве и его названии
       parameters:
-      - description: id лекарства
+      - description: id лекарствоа
         in: path
         name: medicine_id
         required: true
@@ -359,53 +335,47 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ds.Medicine'
+            $ref: '#/definitions/schemes.MedicineResponse'
       summary: Получить одно лекарство
       tags:
       - Лекарства
     put:
-      consumes:
-      - multipart/form-data
-      description: Изменить данные полей о лекарстве
+      description: Позволяет изменить название лекарства и возвращает обновлённые
+        данные
       parameters:
-      - description: Идентификатор лекарства
+      - description: id лекарствоа
         in: path
         name: medicine_id
         required: true
         type: string
-      - description: Название
-        in: formData
-        name: name
-        type: string
-      - description: Производитель
-        in: formData
-        name: manufacturer
-        type: string
-      - description: Количество
-        in: formData
-        name: amount
-        type: integer
-      - description: Изображение лекарства
-        in: formData
-        name: image
-        type: file
-      - description: Дозировка
-        in: formData
-        name: dosage
-        type: string
+      - description: Название лекарствоа
+        in: body
+        name: medicine_name
+        required: true
+        schema:
+          $ref: '#/definitions/app.SwaggerUpdateMedicineRequest'
       produces:
       - application/json
-      responses: {}
-      summary: Изменить лекарство
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemes.UpdateMedicineResponse'
+      summary: Указать название лекарства
       tags:
       - Лекарства
-  /api/medicines/{medicine_id}/add_to_component:
-    post:
-      description: Добавить выбранное лекарство в черновик копмпонента
+  /api/medicines/{medicine_id}/delete_component/{component_id}:
+    delete:
+      description: Удалить компонент из лекарства
       parameters:
       - description: id лекарства
         in: path
         name: medicine_id
+        required: true
+        type: string
+      - description: id компонента
+        in: path
+        name: component_id
         required: true
         type: string
       produces:
@@ -414,8 +384,38 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schemes.AddToComponentResp'
-      summary: Добавить в компонент
+            $ref: '#/definitions/schemes.AllComponentsResponse'
+      summary: Удалить компонент из лекарства
+      tags:
+      - Лекарства
+  /api/medicines/{medicine_id}/moderator_confirm:
+    put:
+      description: Подтвердить или отменить лекарство модератором
+      parameters:
+      - description: id лекарства
+        in: path
+        name: medicine_id
+        required: true
+        type: string
+      - description: подтвердить
+        in: body
+        name: confirm
+        required: true
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
+      summary: Подтвердить лекарство
+      tags:
+      - Лекарства
+  /api/medicines/user_confirm:
+    put:
+      description: Сформировать или удалить лекарство пользователем
+      responses:
+        "200":
+          description: OK
+      summary: Сформировать лекарство
       tags:
       - Лекарства
   /api/user/login:

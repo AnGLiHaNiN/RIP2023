@@ -1,5 +1,5 @@
 ServiceHost = "0.0.0.0"
-ServicePort = 5000
+ServicePort = 8000
 [minio]
 Endpoint = "localhost:9000"
 BucketName = "images"
