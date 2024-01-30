@@ -2,6 +2,7 @@ package schemes
 
 import (
 	"R_I_P_labs/internal/app/ds"
+	"R_I_P_labs/internal/app/repository"
 	"time"
 )
 
@@ -9,14 +10,9 @@ type AllComponentsResponse struct {
 	Components []ds.Component `json:"components"`
 }
 
-type MedicineShort struct {
-	UUID           string `json:"uuid"`
-	ComponentCount int    `json:"component_count"`
-}
-
 type GetAllComponentsResponse struct {
-	DraftMedicine *MedicineShort         `json:"draft_medicine"`
-	Components            []ds.Component `json:"components"`
+	DraftMedicine *string        `json:"draft_medicine"`
+	Components    []ds.Component `json:"components"`
 }
 
 type AllMedicinesResponse struct {
@@ -24,41 +20,43 @@ type AllMedicinesResponse struct {
 }
 
 type MedicineResponse struct {
-	Medicine MedicineOutput `json:"medicine"`
-	Components    []ds.Component  `json:"components"`
+	Medicine   MedicineOutput                  `json:"medicine"`
+	Components []repository.ComponentWithCount `json:"components"`
 }
 
 type UpdateMedicineResponse struct {
-	Medicine MedicineOutput  `json:"medicines"`
+	Medicine MedicineOutput `json:"medicines"`
 }
 
 type MedicineOutput struct {
-	UUID           string  `json:"uuid"`
-	Status         string  `json:"status"`
-	CreationDate   string  `json:"creation_date"`
-	FormationDate  *string `json:"formation_date"`
-	CompletionDate *string `json:"completion_date"`
-	Moderator      *string `json:"moderator"`
-	Customer       string  `json:"customer"`
-	MedicineName      string  `json:"medicine_name"`
+	UUID               string  `json:"uuid"`
+	Status             string  `json:"status"`
+	CreationDate       string  `json:"creation_date"`
+	FormationDate      *string `json:"formation_date"`
+	CompletionDate     *string `json:"completion_date"`
+	Moderator          *string `json:"moderator"`
+	Customer           string  `json:"customer"`
+	Name               *string `json:"name"`
+	VerificationStatus *string `json:"verification_status"`
 }
 
 func ConvertMedicine(medicine *ds.Medicine) MedicineOutput {
 	output := MedicineOutput{
-		UUID:         medicine.UUID,
-		Status:       medicine.Status,
-		CreationDate: medicine.CreationDate.Format("2006-01-02 15:04:05"),
-		MedicineName:    medicine.MedicineName,
-		Customer:     medicine.Customer.Login,
+		UUID:               medicine.UUID,
+		Status:             medicine.Status,
+		CreationDate:       medicine.CreationDate.Format(time.RFC3339),
+		Name:               medicine.Name,
+		Customer:           medicine.Customer.Login,
+		VerificationStatus: medicine.VerificationStatus,
 	}
 
 	if medicine.FormationDate != nil {
-		formationDate := medicine.FormationDate.Format("2006-01-02 15:04:05")
+		formationDate := medicine.FormationDate.Format(time.RFC3339)
 		output.FormationDate = &formationDate
 	}
 
 	if medicine.CompletionDate != nil {
-		completionDate := medicine.CompletionDate.Format("2006-01-02 15:04:05")
+		completionDate := medicine.CompletionDate.Format(time.RFC3339)
 		output.CompletionDate = &completionDate
 	}
 
@@ -73,18 +71,7 @@ type AddToMedicineResp struct {
 	ComponentsCount int64 `json:"component_count"`
 }
 
-type LoginResp struct {
-	ExpiresIn   time.Duration `json:"expires_in"`
-	AccessToken string        `json:"access_token"`
-	TokenType   string        `json:"token_type"`
-}
-
-type SwaggerLoginResp struct {
-	ExpiresIn   int64  `json:"expires_in"`
+type AuthResp struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
-}
-
-type RegisterResp struct {
-	Ok bool `json:"ok"`
 }

@@ -32,8 +32,8 @@ func (r *Repository) AddComponent(component *ds.Component) error {
 func (r *Repository) GetComponentByName(name string) ([]ds.Component, error) {
 	var components []ds.Component
 
-	err := r.db.
-		Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%").Where("is_deleted = ?", false).
+	err := r.db.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%").
+		Where("is_deleted = ?", false).
 		Find(&components).Error
 
 	if err != nil {
@@ -52,10 +52,30 @@ func (r *Repository) SaveComponent(component *ds.Component) error {
 }
 
 func (r *Repository) AddToMedicine(medicineId, componentId string) error {
-	NotContent := ds.MedicineProduction{MedicineId: medicineId, ComponentId: componentId}
-	err := r.db.Create(&NotContent).Error
-	if err != nil {
-		return err
+	existingRecord := ds.MedicineProduction{}
+	err := r.db.Where(&ds.MedicineProduction{MedicineId: medicineId, ComponentId: componentId}).First(&existingRecord).Error
+
+	if err == nil {
+		existingRecord.Count++
+		return r.db.Save(&existingRecord).Error
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		newRecord := ds.MedicineProduction{
+			MedicineId:  medicineId,
+			ComponentId: componentId,
+		}
+		return r.db.Create(&newRecord).Error
 	}
-	return nil
+	return err
+}
+
+func (r *Repository) ChangeCount(medicineId, componentId string, count int) error {
+	condition := ds.MedicineProduction{
+		MedicineId:  medicineId,
+		ComponentId: componentId,
+	}
+	updateData := ds.MedicineProduction{
+		Count: count,
+	}
+
+	return r.db.Model(&ds.MedicineProduction{}).Where(&condition).Updates(&updateData).Error
 }

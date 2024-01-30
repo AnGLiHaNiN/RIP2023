@@ -50,8 +50,6 @@ func (app *Application) WithAuthCheck(assignedRoles ...role.Role) func(ctx *gin.
 			return
 		}
 
-
-
 		for _, oneOfAssignedRole := range assignedRoles {
 			if claims.Role == oneOfAssignedRole {
 				c.Set("userId", claims.UserUUID)

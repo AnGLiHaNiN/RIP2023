@@ -20,13 +20,19 @@ type AddComponentRequest struct {
 	Image *multipart.FileHeader `form:"image" json:"image"`
 }
 
+type ChangeUserReq struct {
+	Password *string `json:"password" binding:"omitempty,max=30"`
+	Name     *string `json:"name" binding:"omitempty,max=60"`
+	Email    *string `json:"email" binding:"omitempty,max=40"`
+}
+
 type ChangeComponentRequest struct {
 	ComponentId string                `uri:"component_id" binding:"required,uuid"`
-	Name         *string               `form:"name" json:"name" binding:"omitempty,max=100"`
-	WorldName       *string               `form:"world_name" json:"world_name" binding:"omitempty,max=75"`
-	Amount         *int                  `form:"amount" json:"amount"`
+	Name        *string               `form:"name" json:"name" binding:"omitempty,max=100"`
+	WorldName   *string               `form:"world_name" json:"world_name" binding:"omitempty,max=75"`
+	Amount      *int                  `form:"amount" json:"amount"`
 	Image       *multipart.FileHeader `form:"image" json:"image"`
-	Properties      *string               `form:"properties" json:"properties" binding:"omitempty,max=100"`
+	Properties  *string               `form:"properties" json:"properties" binding:"omitempty,max=200"`
 }
 
 type AddToMedicineRequest struct {
@@ -34,8 +40,8 @@ type AddToMedicineRequest struct {
 }
 
 type GetAllMedicinesRequst struct {
-	FormationDateStart *time.Time `form:"formation_date_start" json:"formation_date_start" time_format:"2006-01-02 15:04:05"`
-	FormationDateEnd   *time.Time `form:"formation_date_end" json:"formation_date_end" time_format:"2006-01-02 15:04:05"`
+	FormationDateStart *time.Time `form:"formation_date_start" json:"formation_date_start" time_format:"2006-01-02"`
+	FormationDateEnd   *time.Time `form:"formation_date_end" json:"formation_date_end" time_format:"2006-01-02"`
 	Status             string     `form:"status"`
 }
 
@@ -44,15 +50,18 @@ type MedicineRequest struct {
 }
 
 type UpdateMedicineRequest struct {
+	Name string `form:"name" json:"name" binding:"required,max=50"`
+}
+
+type ChangeCountReq struct {
 	URI struct {
-		MedicineId string `uri:"medicine_id" binding:"required,uuid"`
+		ComponentId string `uri:"component_id" binding:"required,uuid"`
 	}
-	MedicineName string `form:"medicine_name" json:"medicine_name" binding:"required,max=50"`
+	Count int `json:"count" binding:"required"`
 }
 
 type DeleteFromMedicineRequest struct {
-	MedicineId string `uri:"medicine_id" binding:"required,uuid"`
-	ComponentId    string `uri:"component_id" binding:"required,uuid"`
+	ComponentId string `uri:"component_id" binding:"required,uuid"`
 }
 
 type UserConfirmRequest struct {
@@ -63,7 +72,7 @@ type ModeratorConfirmRequest struct {
 	URI struct {
 		MedicineId string `uri:"medicine_id" binding:"required,uuid"`
 	}
-	Confirm bool `form:"confirm" binding:"required"`
+	Confirm *bool `form:"confirm" binding:"required"`
 }
 
 type LoginReq struct {
@@ -74,4 +83,12 @@ type LoginReq struct {
 type RegisterReq struct {
 	Login    string `form:"login" binding:"required,max=30"`
 	Password string `form:"password" binding:"required,max=30"`
+}
+
+type VerificationReq struct {
+	URI struct {
+		MedicineId string `uri:"medicine_id" binding:"required,uuid"`
+	}
+	VerificationStatus *bool  `json:"verification_status" form:"verification_status" binding:"required"`
+	Token              string `json:"token" form:"token" binding:"required"`
 }

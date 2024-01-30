@@ -2,7 +2,7 @@ basePath: /
 definitions:
   app.SwaggerUpdateMedicineRequest:
     properties:
-      medicine_type:
+      name:
         type: string
     type: object
   ds.Component:
@@ -25,17 +25,27 @@ definitions:
     - properties
     - world_name
     type: object
-  schemes.AddToMedicineResp:
+  repository.ComponentWithCount:
     properties:
-      component_count:
+      amount:
         type: integer
-    type: object
-  schemes.AllComponentsResponse:
-    properties:
-      components:
-        items:
-          $ref: '#/definitions/ds.Component'
-        type: array
+      count:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      properties:
+        type: string
+      uuid:
+        type: string
+      world_name:
+        type: string
+    required:
+    - amount
+    - name
+    - properties
+    - world_name
     type: object
   schemes.AllMedicinesResponse:
     properties:
@@ -44,6 +54,39 @@ definitions:
           $ref: '#/definitions/schemes.MedicineOutput'
         type: array
     type: object
+  schemes.AuthResp:
+    properties:
+      access_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  schemes.ChangeCountReq:
+    properties:
+      count:
+        type: integer
+      uri:
+        properties:
+          componentId:
+            type: string
+        required:
+        - componentId
+        type: object
+    required:
+    - count
+    type: object
+  schemes.ChangeUserReq:
+    properties:
+      email:
+        maxLength: 40
+        type: string
+      name:
+        maxLength: 60
+        type: string
+      password:
+        maxLength: 30
+        type: string
+    type: object
   schemes.GetAllComponentsResponse:
     properties:
       components:
@@ -51,7 +94,7 @@ definitions:
           $ref: '#/definitions/ds.Component'
         type: array
       draft_medicine:
-        $ref: '#/definitions/schemes.MedicineShort'
+        type: string
     type: object
   schemes.LoginReq:
     properties:
@@ -75,30 +118,25 @@ definitions:
         type: string
       formation_date:
         type: string
-      medicine_name:
-        type: string
       moderator:
+        type: string
+      name:
         type: string
       status:
         type: string
       uuid:
+        type: string
+      verification_status:
         type: string
     type: object
   schemes.MedicineResponse:
     properties:
       components:
         items:
-          $ref: '#/definitions/ds.Component'
+          $ref: '#/definitions/repository.ComponentWithCount'
         type: array
       medicine:
         $ref: '#/definitions/schemes.MedicineOutput'
-    type: object
-  schemes.MedicineShort:
-    properties:
-      component_count:
-        type: integer
-      uuid:
-        type: string
     type: object
   schemes.RegisterReq:
     properties:
@@ -112,29 +150,10 @@ definitions:
     - login
     - password
     type: object
-  schemes.RegisterResp:
-    properties:
-      ok:
-        type: boolean
-    type: object
-  schemes.SwaggerLoginResp:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        type: integer
-      token_type:
-        type: string
-    type: object
-  schemes.UpdateMedicineResponse:
-    properties:
-      medicines:
-        $ref: '#/definitions/schemes.MedicineOutput'
-    type: object
 host: 127.0.0.1:8000
 info:
   contact: {}
-  title: Electronic notifications
+  title: Medicines
   version: "1.0"
 paths:
   /api/components:
@@ -188,7 +207,9 @@ paths:
         type: string
       responses:
         "200":
-          description: OK
+          description: success
+          schema:
+            type: string
       summary: Добавить компонент
       tags:
       - Компоненты
@@ -255,9 +276,9 @@ paths:
         in: formData
         name: properties
         type: string
-      produces:
-      - application/json
-      responses: {}
+      responses:
+        "200":
+          description: OK
       summary: Изменить компонент
       tags:
       - Компоненты
@@ -270,17 +291,21 @@ paths:
         name: component_id
         required: true
         type: string
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/schemes.AddToMedicineResp'
       summary: Добавить в компонент
       tags:
       - Компоненты
   /api/medicines:
+    delete:
+      description: Удаляет лекарство по id
+      responses:
+        "200":
+          description: OK
+      summary: Удалить лекарство
+      tags:
+      - Лекарства
     get:
       description: Возвращает все лекарства с фильтрацией по статусу и дате формирования
       parameters:
@@ -306,21 +331,22 @@ paths:
       summary: Получить все лекарства
       tags:
       - Лекарства
-  /api/medicines/{medicine_id}:
-    delete:
-      description: Удаляет лекарство по id
+    put:
+      description: Позволяет изменить название лекарства
       parameters:
-      - description: id лекарства
-        in: path
-        name: medicine_id
+      - description: Название лекарствоа
+        in: body
+        name: name
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/app.SwaggerUpdateMedicineRequest'
       responses:
         "200":
           description: OK
-      summary: Удалить лекарство
+      summary: Указать название лекарства
       tags:
       - Лекарства
+  /api/medicines/{medicine_id}:
     get:
       description: Возвращает подробную информацию о лекарстве и его названии
       parameters:
@@ -337,55 +363,6 @@ paths:
           schema:
             $ref: '#/definitions/schemes.MedicineResponse'
       summary: Получить одно лекарство
-      tags:
-      - Лекарства
-    put:
-      description: Позволяет изменить название лекарства и возвращает обновлённые
-        данные
-      parameters:
-      - description: id лекарствоа
-        in: path
-        name: medicine_id
-        required: true
-        type: string
-      - description: Название лекарствоа
-        in: body
-        name: medicine_name
-        required: true
-        schema:
-          $ref: '#/definitions/app.SwaggerUpdateMedicineRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/schemes.UpdateMedicineResponse'
-      summary: Указать название лекарства
-      tags:
-      - Лекарства
-  /api/medicines/{medicine_id}/delete_component/{component_id}:
-    delete:
-      description: Удалить компонент из лекарства
-      parameters:
-      - description: id лекарства
-        in: path
-        name: medicine_id
-        required: true
-        type: string
-      - description: id компонента
-        in: path
-        name: component_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/schemes.AllComponentsResponse'
-      summary: Удалить компонент из лекарства
       tags:
       - Лекарства
   /api/medicines/{medicine_id}/moderator_confirm:
@@ -409,6 +386,42 @@ paths:
       summary: Подтвердить лекарство
       tags:
       - Лекарства
+  /api/medicines/change_count/{component_id}:
+    put:
+      description: Позволяет изменить вес компонента в лекарстве
+      parameters:
+      - description: id компонента
+        in: path
+        name: component_id
+        required: true
+        type: string
+      - description: Количество
+        in: body
+        name: count
+        required: true
+        schema:
+          $ref: '#/definitions/schemes.ChangeCountReq'
+      responses:
+        "200":
+          description: OK
+      summary: Изменить вес компонента
+      tags:
+      - Лекарства
+  /api/medicines/delete_component/{component_id}:
+    delete:
+      description: Удалить компонент из лекарства
+      parameters:
+      - description: id компонента
+        in: path
+        name: component_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      summary: Удалить компонент из лекарства
+      tags:
+      - Лекарства
   /api/medicines/user_confirm:
     put:
       description: Сформировать или удалить лекарство пользователем
@@ -418,6 +431,30 @@ paths:
       summary: Сформировать лекарство
       tags:
       - Лекарства
+  /api/user:
+    get:
+      description: Получить информацию о профиле пользователя
+      responses:
+        "200":
+          description: OK
+      summary: Профиль
+      tags:
+      - Пользователь
+    put:
+      description: Изменить все или часть данных профиля пользователя
+      parameters:
+      - description: Новые значения
+        in: body
+        name: new_fields
+        required: true
+        schema:
+          $ref: '#/definitions/schemes.ChangeUserReq'
+      responses:
+        "200":
+          description: OK
+      summary: Изменить профиль
+      tags:
+      - Пользователь
   /api/user/login:
     post:
       consumes:
@@ -437,23 +474,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schemes.SwaggerLoginResp'
+            $ref: '#/definitions/schemes.AuthResp'
       summary: Авторизация
       tags:
-      - Авторизация
+      - Пользователь
   /api/user/loguot:
-    post:
-      consumes:
-      - application/json
+    get:
       description: Выход из аккаунта
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
       summary: Выйти из аккаунта
       tags:
-      - Авторизация
+      - Пользователь
   /api/user/sign_up:
     post:
       consumes:
@@ -466,16 +499,12 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/schemes.RegisterReq'
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/schemes.RegisterResp'
       summary: Регистрация
       tags:
-      - Авторизация
+      - Пользователь
 schemes:
 - http
 swagger: "2.0"

@@ -5,8 +5,7 @@ import (
 	"log"
 )
 
-// TODO: change
-// @title Electronic notifications
+// @title Medicines
 // @version 1.0
 
 // @host 127.0.0.1:8000

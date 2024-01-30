@@ -19,6 +19,7 @@ import (
 type Config struct {
 	ServiceHost string
 	ServicePort int
+	Token string
 
 	JWT   JWTConfig   `mapstructure:"jwt"`
 	Minio MinioConfig `mapstructure:"minio"`

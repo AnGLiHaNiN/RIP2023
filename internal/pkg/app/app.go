@@ -15,10 +15,9 @@ import (
 	"R_I_P_labs/internal/app/repository"
 	"R_I_P_labs/internal/app/role"
 
-
-	"github.com/swaggo/files"      
-	"github.com/swaggo/gin-swagger" 
 	_ "R_I_P_labs/docs"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
 type Application struct {
@@ -40,24 +39,26 @@ func (app *Application) Run() {
 	{
 		components := api.Group("/components")
 		{
-			components.GET("/", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetAllComponents)                     // Список с поиском
-			components.GET("/:component_id", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetComponent)            // Одна услуга
-			components.DELETE("/:component_id", app.WithAuthCheck(role.Moderator), app.DeleteComponent)                         				// Удаление
-			components.PUT("/:component_id", app.WithAuthCheck(role.Moderator), app.ChangeComponent)                            				// Изменение
-			components.POST("/", app.WithAuthCheck(role.Moderator), app.AddComponent)                                           				// Добавление
-			components.POST("/:component_id/add_to_medicine", app.WithAuthCheck(role.Customer,role.Moderator), app.AddToMedicine) 					// Добавление в заявку
+			components.GET("", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetAllComponents)           // Список с поиском
+			components.GET("/:component_id", app.WithAuthCheck(role.NotAuthorized, role.Customer, role.Moderator), app.GetComponent) // Одна услуга
+			components.DELETE("/:component_id", app.WithAuthCheck(role.Moderator), app.DeleteComponent)                              // Удаление
+			components.PUT("/:component_id", app.WithAuthCheck(role.Moderator), app.ChangeComponent)                                 // Изменение
+			components.POST("", app.WithAuthCheck(role.Moderator), app.AddComponent)                                                 // Добавление
+			components.POST("/:component_id/add_to_medicine", app.WithAuthCheck(role.Customer, role.Moderator), app.AddToMedicine)   // Добавление в заявку
 		}
-
+		
 		// Заявки - компоненты
 		medicines := api.Group("/medicines")
 		{
-			medicines.GET("/", app.WithAuthCheck(role.Customer, role.Moderator), app.GetAllMedicines)                                         				  // Список (отфильтровать по дате формирования и статусу)
-			medicines.GET("/:medicine_id",app.WithAuthCheck(role.Customer, role.Moderator),  app.GetMedicine)                             				  // Одна заявка
-			medicines.PUT("/:medicine_id/update", app.WithAuthCheck(role.Customer, role.Moderator), app.UpdateMedicine)                                	  // Изменение (добавление транспорта)
-			medicines.DELETE("/:medicine_id", app.WithAuthCheck(role.Customer,role.Moderator), app.DeleteMedicine)                                      				  // Удаление
-			medicines.DELETE("/:medicine_id/delete_component/:component_id", app.WithAuthCheck(role.Customer, role.Moderator), app.DeleteFromMedicine) 	  // Изменеие (удаление услуг)
-			medicines.PUT("/user_confirm", app.WithAuthCheck(role.Customer, role.Moderator), app.UserConfirm)                                    				  // Сформировать создателем
-			medicines.PUT("/:medicine_id/moderator_confirm", app.WithAuthCheck(role.Moderator), app.ModeratorConfirm)                         				  // Завершить отклонить модератором
+			medicines.GET("", app.WithAuthCheck(role.Customer, role.Moderator), app.GetAllMedicines)                                      // Список (отфильтровать по дате формирования и статусу)
+			medicines.GET("/:medicine_id", app.WithAuthCheck(role.Customer, role.Moderator), app.GetMedicine)                             // Одна заявка
+			medicines.PUT("", app.WithAuthCheck(role.Customer, role.Moderator), app.UpdateMedicine)                                       // Изменение
+			medicines.PUT("/change_count/:component_id", app.WithAuthCheck(role.Customer, role.Moderator), app.ChangeCount)         // Изменение числа услуг
+			medicines.DELETE("", app.WithAuthCheck(role.Customer, role.Moderator), app.DeleteMedicine)                                    // Удаление
+			medicines.DELETE("/delete_component/:component_id", app.WithAuthCheck(role.Customer, role.Moderator), app.DeleteFromMedicine) // Изменеие (удаление услуг)
+			medicines.PUT("/user_confirm", app.WithAuthCheck(role.Customer, role.Moderator), app.UserConfirm)                             // Сформировать создателем
+			medicines.PUT("/:medicine_id/moderator_confirm", app.WithAuthCheck(role.Moderator), app.ModeratorConfirm)                     // Завершить отклонить модератором
+			medicines.PUT("/:medicine_id/verification", app.Verification)                                                                 // Ответ асинхронного сервиса
 		}
 
 		// Пользователи (авторизация)
@@ -65,7 +66,9 @@ func (app *Application) Run() {
 		{
 			user.POST("/sign_up", app.Register)
 			user.POST("/login", app.Login)
-			user.POST("/logout", app.Logout)
+			user.GET("/logout", app.Logout)
+			user.GET("", app.WithAuthCheck(role.Customer, role.Moderator), app.Profile)
+			user.PUT("", app.WithAuthCheck(role.Customer, role.Moderator), app.UpdateUser)
 		}
 
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -75,7 +78,6 @@ func (app *Application) Run() {
 		log.Println("Server down")
 	}
 }
-
 
 func New() (*Application, error) {
 	var err error

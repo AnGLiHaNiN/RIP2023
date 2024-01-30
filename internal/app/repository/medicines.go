@@ -14,7 +14,7 @@ func (r *Repository) GetAllMedicines(customerId *string, formationDateStart, for
 	var medicines []ds.Medicine
 	query := r.db.Preload("Customer").Preload("Moderator").
 		Where("LOWER(status) LIKE ?", "%"+strings.ToLower(status)+"%").
-		Where("status != ?", ds.DELETED)
+		Where("status != ? AND status != ?", ds.DELETED, ds.DRAFT)
 
 	if customerId != nil {
 		query = query.Where("customer_id = ?", *customerId)
@@ -54,7 +54,7 @@ func (r *Repository) CreateDraftMedicine(customerId string) (*ds.Medicine, error
 	return medicine, nil
 }
 
-func (r *Repository) GetMedicineById(medicineId string, userId  *string) (*ds.Medicine, error) {
+func (r *Repository) GetMedicineById(medicineId string, userId *string) (*ds.Medicine, error) {
 	medicine := &ds.Medicine{}
 	query := r.db.Preload("Moderator").Preload("Customer").
 		Where("status != ?", ds.DELETED)
@@ -71,11 +71,16 @@ func (r *Repository) GetMedicineById(medicineId string, userId  *string) (*ds.Me
 	return medicine, nil
 }
 
-func (r *Repository) GetMedicineProduction(medicineId string) ([]ds.Component, error) {
-	var components []ds.Component
+type ComponentWithCount struct {
+	ds.Component
+	Count int `json:"count"`
+}
+
+func (r *Repository) GetMedicineProduction(medicineId string) ([]ComponentWithCount, error) {
+	var components []ComponentWithCount
 
 	err := r.db.Table("medicine_productions").
-		Select("components.*").
+		Select("components.*, medicine_productions.count as count").
 		Joins("JOIN components ON medicine_productions.component_id = components.uuid").
 		Where(ds.MedicineProduction{MedicineId: medicineId}).
 		Scan(&components).Error
@@ -87,28 +92,12 @@ func (r *Repository) GetMedicineProduction(medicineId string) ([]ds.Component, e
 }
 
 func (r *Repository) SaveMedicine(medicine *ds.Medicine) error {
-	err := r.db.Save(medicine).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return r.db.Save(medicine).Error
 }
 
 func (r *Repository) DeleteFromMedicine(medicineId, ComponentId string) error {
-	err := r.db.Delete(&ds.MedicineProduction{MedicineId: medicineId, ComponentId: ComponentId}).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *Repository) CountComponents(medicineId string) (int64, error) {
-	var count int64
-	err := r.db.Model(&ds.MedicineProduction{}).
-		Where("medicine_id = ?", medicineId).
-		Count(&count).Error
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
+	return r.db.Delete(&ds.MedicineProduction{
+		MedicineId:  medicineId,
+		ComponentId: ComponentId,
+	}).Error
 }

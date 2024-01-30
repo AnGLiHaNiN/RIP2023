@@ -91,7 +91,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "success",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -128,9 +131,6 @@ const docTemplate = `{
                 "description": "Изменить данные полей о компоненте",
                 "consumes": [
                     "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
                 ],
                 "tags": [
                     "Компоненты"
@@ -175,7 +175,11 @@ const docTemplate = `{
                         "in": "formData"
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
             },
             "delete": {
                 "description": "Удаляет лекраство по id",
@@ -202,9 +206,6 @@ const docTemplate = `{
         "/api/components/{component_id}/add_to_medicine": {
             "post": {
                 "description": "Добавить выбранный компонент в черновик лекарства",
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
                     "Компоненты"
                 ],
@@ -220,10 +221,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/schemes.AddToMedicineResp"
-                        }
+                        "description": "OK"
                     }
                 }
             }
@@ -264,6 +262,96 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/schemes.AllMedicinesResponse"
                         }
+                    }
+                }
+            },
+            "put": {
+                "description": "Позволяет изменить название лекарства",
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Указать название лекарства",
+                "parameters": [
+                    {
+                        "description": "Название лекарствоа",
+                        "name": "name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.SwaggerUpdateMedicineRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Удаляет лекарство по id",
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Удалить лекарство",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/medicines/change_count/{component_id}": {
+            "put": {
+                "description": "Позволяет изменить вес компонента в лекарстве",
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Изменить вес компонента",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id компонента",
+                        "name": "component_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Количество",
+                        "name": "count",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemes.ChangeCountReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/medicines/delete_component/{component_id}": {
+            "delete": {
+                "description": "Удалить компонент из лекарства",
+                "tags": [
+                    "Лекарства"
+                ],
+                "summary": "Удалить компонент из лекарства",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id компонента",
+                        "name": "component_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -309,99 +397,6 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "put": {
-                "description": "Позволяет изменить название лекарства и возвращает обновлённые данные",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Лекарства"
-                ],
-                "summary": "Указать название лекарства",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "id лекарствоа",
-                        "name": "medicine_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Название лекарствоа",
-                        "name": "medicine_name",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/app.SwaggerUpdateMedicineRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/schemes.UpdateMedicineResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Удаляет лекарство по id",
-                "tags": [
-                    "Лекарства"
-                ],
-                "summary": "Удалить лекарство",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "id лекарства",
-                        "name": "medicine_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/api/medicines/{medicine_id}/delete_component/{component_id}": {
-            "delete": {
-                "description": "Удалить компонент из лекарства",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Лекарства"
-                ],
-                "summary": "Удалить компонент из лекарства",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "id лекарства",
-                        "name": "medicine_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "id компонента",
-                        "name": "component_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/schemes.AllComponentsResponse"
-                        }
-                    }
-                }
             }
         },
         "/api/medicines/{medicine_id}/moderator_confirm": {
@@ -436,6 +431,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/user": {
+            "get": {
+                "description": "Получить информацию о профиле пользователя",
+                "tags": [
+                    "Пользователь"
+                ],
+                "summary": "Профиль",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "put": {
+                "description": "Изменить все или часть данных профиля пользователя",
+                "tags": [
+                    "Пользователь"
+                ],
+                "summary": "Изменить профиль",
+                "parameters": [
+                    {
+                        "description": "Новые значения",
+                        "name": "new_fields",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemes.ChangeUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/user/login": {
             "post": {
                 "description": "Авторизует пользователя по логиню, паролю и отдаёт jwt токен для дальнейших запросов",
@@ -446,7 +478,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Авторизация"
+                    "Пользователь"
                 ],
                 "summary": "Авторизация",
                 "parameters": [
@@ -464,23 +496,17 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schemes.SwaggerLoginResp"
+                            "$ref": "#/definitions/schemes.AuthResp"
                         }
                     }
                 }
             }
         },
         "/api/user/loguot": {
-            "post": {
+            "get": {
                 "description": "Выход из аккаунта",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "Авторизация"
+                    "Пользователь"
                 ],
                 "summary": "Выйти из аккаунта",
                 "responses": {
@@ -496,11 +522,8 @@ const docTemplate = `{
                 "consumes": [
                     "application/json"
                 ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "Авторизация"
+                    "Пользователь"
                 ],
                 "summary": "Регистрация",
                 "parameters": [
@@ -516,10 +539,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/schemes.RegisterResp"
-                        }
+                        "description": "OK"
                     }
                 }
             }
@@ -529,7 +549,7 @@ const docTemplate = `{
         "app.SwaggerUpdateMedicineRequest": {
             "type": "object",
             "properties": {
-                "medicine_type": {
+                "name": {
                     "type": "string"
                 }
             }
@@ -563,22 +583,35 @@ const docTemplate = `{
                 }
             }
         },
-        "schemes.AddToMedicineResp": {
+        "repository.ComponentWithCount": {
             "type": "object",
+            "required": [
+                "amount",
+                "name",
+                "properties",
+                "world_name"
+            ],
             "properties": {
-                "component_count": {
+                "amount": {
                     "type": "integer"
-                }
-            }
-        },
-        "schemes.AllComponentsResponse": {
-            "type": "object",
-            "properties": {
-                "components": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ds.Component"
-                    }
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "properties": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                },
+                "world_name": {
+                    "type": "string"
                 }
             }
         },
@@ -593,6 +626,56 @@ const docTemplate = `{
                 }
             }
         },
+        "schemes.AuthResp": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemes.ChangeCountReq": {
+            "type": "object",
+            "required": [
+                "count"
+            ],
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "uri": {
+                    "type": "object",
+                    "required": [
+                        "componentId"
+                    ],
+                    "properties": {
+                        "componentId": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "schemes.ChangeUserReq": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 40
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 60
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 30
+                }
+            }
+        },
         "schemes.GetAllComponentsResponse": {
             "type": "object",
             "properties": {
@@ -603,7 +686,7 @@ const docTemplate = `{
                     }
                 },
                 "draft_medicine": {
-                    "$ref": "#/definitions/schemes.MedicineShort"
+                    "type": "string"
                 }
             }
         },
@@ -639,16 +722,19 @@ const docTemplate = `{
                 "formation_date": {
                     "type": "string"
                 },
-                "medicine_name": {
+                "moderator": {
                     "type": "string"
                 },
-                "moderator": {
+                "name": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
                 },
                 "uuid": {
+                    "type": "string"
+                },
+                "verification_status": {
                     "type": "string"
                 }
             }
@@ -659,22 +745,11 @@ const docTemplate = `{
                 "components": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ds.Component"
+                        "$ref": "#/definitions/repository.ComponentWithCount"
                     }
                 },
                 "medicine": {
                     "$ref": "#/definitions/schemes.MedicineOutput"
-                }
-            }
-        },
-        "schemes.MedicineShort": {
-            "type": "object",
-            "properties": {
-                "component_count": {
-                    "type": "integer"
-                },
-                "uuid": {
-                    "type": "string"
                 }
             }
         },
@@ -694,36 +769,6 @@ const docTemplate = `{
                     "maxLength": 30
                 }
             }
-        },
-        "schemes.RegisterResp": {
-            "type": "object",
-            "properties": {
-                "ok": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "schemes.SwaggerLoginResp": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "token_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "schemes.UpdateMedicineResponse": {
-            "type": "object",
-            "properties": {
-                "medicines": {
-                    "$ref": "#/definitions/schemes.MedicineOutput"
-                }
-            }
         }
     }
 }`
@@ -734,7 +779,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "127.0.0.1:8000",
 	BasePath:         "/",
 	Schemes:          []string{"http"},
-	Title:            "Electronic notifications",
+	Title:            "Medicines",
 	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
